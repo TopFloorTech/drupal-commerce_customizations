@@ -1,0 +1,14 @@
+{
+  "name": "drupal/commerce_customizations",
+  "type": "drupal-module",
+  "description": "Allows customization of many aspects of the Commerce 2.x checkout process.",
+  "keywords": ["Drupal"],
+  "license": "GPL-2.0+",
+  "homepage": "https://github.com/bmcclure/drupal-commerce_customizations",
+  "minimum-stability": "dev",
+  "support": {
+    "issues": "https://github.com/bmcclure/drupal-commerce_customizations/issues",
+    "source": "https://github.com/bmcclure/drupal-commerce_customizations.git"
+  },
+  "require": { }
+}

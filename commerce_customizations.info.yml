@@ -1,0 +1,7 @@
+name: Commerce Customizations
+type: module
+description: Allows customization of many aspects of Commerce 2.x.
+core: 8.x
+package: Commerce
+dependencies:
+  - hook_event_dispatcher

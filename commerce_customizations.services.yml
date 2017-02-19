@@ -1,0 +1,9 @@
+services:
+  commerce_customizations.cart_event_subscriber:
+    class: '\Drupal\commerce_customizations\EventSubscriber\CartEventSubscriber'
+    tags:
+      - { name: 'event_subscriber' }
+  commerce_customizations.checkout_event_subscriber:
+    class: '\Drupal\commerce_customizations\EventSubscriber\CheckoutEventSubscriber'
+    tags:
+      - { name: 'event_subscriber' }
