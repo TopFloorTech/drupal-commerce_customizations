@@ -30,6 +30,13 @@ class CheckoutEventSubscriber implements EventSubscriberInterface {
     }
 
     if (isset($form['payment_information']['add_payment_method'])) {
+      $form['payment_information']['add_payment_method']['copy_from_shipping'] = [
+        '#type' => 'checkbox',
+        '#title' => t('My billing address is the same as my shipping address.'),
+        '#default_value' => TRUE,
+        '#weight' => -10,
+      ];
+
       $form['payment_information']['add_payment_method']['#after_build'][] = [$this, 'processPaymentInformation'];
     }
 
@@ -37,20 +44,32 @@ class CheckoutEventSubscriber implements EventSubscriberInterface {
   }
 
   public function processPaymentInformation(array $element, FormStateInterface $form_state) {
-    if (isset($element['billing_information'])) {
-      $element['billing_information']['copy_from_shipping'] = [
-        '#type' => 'checkbox',
-        '#title' => t('My billing address is the same as my shipping address.'),
-        '#default_value' => TRUE,
-      ];
-    }
+    /*if (isset($element['#type'])) {
+      $info = \Drupal::service('element_info')->getInfo($element['#type']);
+
+      if (isset($info['#process'])) {
+        foreach ($info['#process'] as $process) {
+          $element = $process($element, $form_state, $form);
+        }
+      }
+    }*/
 
     if (isset($element['payment_details'])) {
+      $element['payment_details']['#weight'] = -15;
+
       $element['payment_details']['#sorted'] = FALSE;
       $element['payment_details']['number']['#prefix'] = $this->buildCreditCardFormIcons();
 
       $element['payment_details']['security_code']['#weight'] = 0.002;
       $element['payment_details']['expiration']['#weight'] = 0.003;
+    }
+
+    if (isset($element['billing_information'])) {
+      $element['billing_information']['#states']['visible'] = [
+        ':input[name="payment_information[add_payment_method][copy_from_shipping]"]' => [
+          'checked' => FALSE,
+        ],
+      ];
     }
 
     return $element;
