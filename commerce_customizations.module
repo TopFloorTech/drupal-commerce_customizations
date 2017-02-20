@@ -5,7 +5,6 @@
  * Contains commerce_checkout_customizations.module.
  */
 
-use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
 
 /**

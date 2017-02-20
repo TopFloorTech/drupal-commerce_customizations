@@ -3,7 +3,6 @@
 namespace Drupal\commerce_customizations\EventSubscriber;
 
 use Drupal\hook_event_dispatcher\Event\Form\FormAlterEvent;
-use Drupal\hook_event_dispatcher\Event\Form\FormBaseAlterEvent;
 use Drupal\hook_event_dispatcher\HookEventDispatcherEvents;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
@@ -86,6 +85,8 @@ class CartEventSubscriber implements EventSubscriberInterface {
         $form['remove_button'][$index]['#suffix'] = '</span>';
       }
     }
+
+    $form['#attached']['library'][] = 'commerce_customizations/cart-form';
 
     $event->setForm($form);
   }

@@ -1,0 +1,13 @@
+payment-form:
+  version: 1.0.3
+  js:
+    js/credit-card-form.js: {}
+    js/copy-address.js: {}
+  dependencies:
+    - core/drupal.ajax
+cart-form:
+  version: 1.0.0
+  js:
+    js/cart-form.js: {}
+  dependencies:
+    - core/drupal.ajax
