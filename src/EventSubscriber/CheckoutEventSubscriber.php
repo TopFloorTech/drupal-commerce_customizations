@@ -25,14 +25,19 @@ class CheckoutEventSubscriber implements EventSubscriberInterface {
       $form['actions']['next']['#suffix'] = '</span>';
     }
 
-    if (isset($form['shipping_information']['recalculate_shipping'])) {
+    if (isset($form['shipping_information'])) {
+      $form['shipping_information']['#weight'] = -10;
       $form['shipping_information']['recalculate_shipping']['#value'] = t('Show My Shipping Options');
+    }
+
+    if (isset($form['payment_information'])) {
+      $form['totals'] = $this->buildTotals($form);
     }
 
     if (isset($form['payment_information']['add_payment_method'])) {
       $form['payment_information']['add_payment_method']['copy_from_shipping'] = [
         '#type' => 'checkbox',
-        '#title' => t('My billing address is the same as my shipping address.'),
+        '#title' => t('My billing address is the same as my shipping address'),
         '#default_value' => TRUE,
         '#weight' => -10,
       ];
@@ -60,6 +65,41 @@ class CheckoutEventSubscriber implements EventSubscriberInterface {
           'checked' => FALSE,
         ],
       ];
+    }
+
+    $form_state->setValue('copy_from_shipping', TRUE);
+
+    return $element;
+  }
+
+  protected function buildTotals(array $form) {
+    $element = [];
+
+    if (isset($form['order_summary']['#arguments'][0])) {
+      $orderId = $form['order_summary']['#arguments'][0];
+
+      /** @var \Drupal\commerce_order\Entity\OrderInterface $order */
+      $order = \Drupal::entityTypeManager()->getStorage('commerce_order')->load($orderId);
+
+      $viewBuilder = \Drupal::entityTypeManager()->getViewBuilder('commerce_order');
+
+      if ($order) {
+        $field = $viewBuilder->viewField($order->get('total_price'), [
+          'label' => 'hidden',
+          'type' => 'commerce_order_total_summary',
+        ]);
+
+        $element = [
+          '#type' => 'container',
+          '#attributes' => ['class' => ['order-total']],
+          'label' => [
+            '#markup' => '<div class="order-total__label">' . t('Order total') . ':</div>',
+          ],
+          'totals' => $field,
+          '#weight' => -1,
+          '#prefix' => '<div class="sales-tax-message">' . t('<strong>We collect sales tax in the following states: CT, GA, IL, and SC.</strong> If you are a tax exempt organization in one of these states, please call your order in otherwise you will be charged sales tax. Thank you.') . '</div>',
+        ];
+      }
     }
 
     return $element;
