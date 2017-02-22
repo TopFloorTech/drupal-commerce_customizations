@@ -3,7 +3,8 @@
 namespace Drupal\commerce_customizations\EventSubscriber;
 
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\hook_event_dispatcher\Event\Form\FormIdAlterEvent;
+use Drupal\hook_event_dispatcher\Event\Form\FormAlterEvent;
+use Drupal\hook_event_dispatcher\HookEventDispatcherEvents;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 /**
@@ -14,10 +15,14 @@ use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 class CheckoutEventSubscriber implements EventSubscriberInterface {
 
   /**
-   * @param \Drupal\hook_event_dispatcher\Event\Form\FormIdAlterEvent $event
+   * @param \Drupal\hook_event_dispatcher\Event\Form\FormAlterEvent $event
    */
-  public function alterCheckoutForm(FormIdAlterEvent $event) {
+  public function alterCheckoutForm(FormAlterEvent $event) {
     $form = $event->getForm();
+
+    if (strpos($event->getFormId(), 'commerce_checkout_flow_') !== 0) {
+      return;
+    }
 
     if (isset($form['actions']['next'])) {
       $form['actions']['next']['#attributes']['class'][] = 'CheckoutButton-input';
@@ -133,7 +138,7 @@ class CheckoutEventSubscriber implements EventSubscriberInterface {
    */
   static function getSubscribedEvents() {
     return [
-      'hook_event_dispatcher.form_multistep_default.alter' => [
+      HookEventDispatcherEvents::FORM_ALTER => [
         ['alterCheckoutForm'],
       ],
     ];
