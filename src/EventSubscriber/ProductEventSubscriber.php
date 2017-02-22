@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\commerce_quote_cart\EventSubscriber;
+namespace Drupal\commerce_customizations\EventSubscriber;
 
 use Drupal\commerce_cart\Event\CartEntityAddEvent;
 use Drupal\commerce_cart\Event\CartOrderItemUpdateEvent;
