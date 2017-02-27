@@ -31,6 +31,12 @@
         });
       }
     });
+
+    if (checkbox.is(':checked')) {
+      $('input:text, select', shippingInfo).each(function () {
+        copyField($(this), paymentInfo);
+      });
+    }
   }
 
   Drupal.behaviors.commerceCustomizationsCopyAddress = {

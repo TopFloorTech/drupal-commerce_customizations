@@ -37,6 +37,7 @@ class CheckoutEventSubscriber implements EventSubscriberInterface {
 
     if (isset($form['payment_information'])) {
       $form['totals'] = $this->buildTotals($form);
+      $form['#attached']['library'][] = 'commerce_customizations/payment-form';
     }
 
     if (isset($form['payment_information']['add_payment_method'])) {
@@ -48,8 +49,6 @@ class CheckoutEventSubscriber implements EventSubscriberInterface {
       ];
 
       $form['payment_information']['add_payment_method']['#after_build'][] = [$this, 'processPaymentInformation'];
-
-      $form['#attached']['library'][] = 'commerce_customizations/payment-form';
     }
 
     $event->setForm($form);
