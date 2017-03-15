@@ -2,8 +2,10 @@
 
 namespace Drupal\commerce_customizations;
 
+use Drupal\account_modal\AjaxCommand\RefreshPageCommand;
 use Drupal\commerce_order\Entity\OrderInterface;
 use Drupal\Core\Ajax\AjaxResponse;
+use Drupal\Core\Ajax\RedirectCommand;
 use Drupal\Core\Ajax\ReplaceCommand;
 use Drupal\Core\Form\FormStateInterface;
 
@@ -41,6 +43,8 @@ class CommerceShippingAjaxHelper {
       $checkoutOrderManager->getCheckoutFlow($order)->getPlugin()
     );
 
+    $form_state->set('shipping_profile', $form['shipping_information']['shipping_profile']['#profile']);
+
     $shippingInfo->submitPaneForm($form['shipping_information'], $form_state, $form);
 
     $order->setRefreshState(TRUE);
@@ -50,6 +54,7 @@ class CommerceShippingAjaxHelper {
     // Refresh the order totals
     $response = new AjaxResponse();
     $response->addCommand(self::getOrderSummaryCommand($order));
+    $response->addCommand(new RefreshPageCommand());
 
     return $response;
   }

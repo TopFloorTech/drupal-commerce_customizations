@@ -90,5 +90,6 @@ function commerce_customizations_field_widget_form_alter(&$element, \Drupal\Core
         'message' => NULL,
       ],
     ];
+    $element['#attached']['library'][] = 'account_modal/account_modal';
   }
 }
