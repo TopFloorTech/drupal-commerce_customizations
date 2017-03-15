@@ -1,5 +1,5 @@
 payment-form:
-  version: 1.0.5
+  version: 1.0.6
   js:
     js/credit-card-form.js: {}
     js/copy-address.js: {}
@@ -9,5 +9,11 @@ cart-form:
   version: 1.0.0
   js:
     js/cart-form.js: {}
+  dependencies:
+    - core/drupal.ajax
+shipping-form:
+  version: 1.0.1
+  js:
+    js/shipping-form.js: {}
   dependencies:
     - core/drupal.ajax
