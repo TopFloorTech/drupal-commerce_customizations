@@ -7,7 +7,10 @@ use Drupal\commerce_order\Entity\OrderInterface;
 use Drupal\Core\Ajax\AjaxResponse;
 use Drupal\Core\Ajax\RedirectCommand;
 use Drupal\Core\Ajax\ReplaceCommand;
+use Drupal\Core\Entity\Entity;
+use Drupal\Core\Entity\Entity\EntityFormDisplay;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Render\Element;
 
 class CommerceShippingAjaxHelper {
   public static function getOrderSummaryCommand(OrderInterface $order) {
@@ -30,32 +33,47 @@ class CommerceShippingAjaxHelper {
       return;
     }
 
-    /** @var \Drupal\commerce_checkout\CheckoutOrderManagerInterface $checkoutOrderManager */
-    $checkoutOrderManager = \Drupal::service('commerce_checkout.checkout_order_manager');
+    $order = clone $order;
+    self::validateAndSubmitShippingInformation($order, $form, $form_state);
 
-    /** @var \Drupal\commerce_checkout\CheckoutPaneManager $checkoutPaneManager */
-    $checkoutPaneManager = \Drupal::service('plugin.manager.commerce_checkout_pane');
+    /** @var \Drupal\commerce_order\OrderRefreshInterface $order_refresh */
+    $order_refresh = \Drupal::service('commerce_order.order_refresh');
+    $order_refresh->refresh($order);
 
-    /** @var \Drupal\commerce_shipping\Plugin\Commerce\CheckoutPane\ShippingInformation $shippingInfo */
-    $shippingInfo = $checkoutPaneManager->createInstance(
-      'shipping_information',
-      [],
-      $checkoutOrderManager->getCheckoutFlow($order)->getPlugin()
-    );
-
-    $form_state->set('shipping_profile', $form['shipping_information']['shipping_profile']['#profile']);
-
-    $shippingInfo->submitPaneForm($form['shipping_information'], $form_state, $form);
-
-    $order->setRefreshState(TRUE);
-    // Save the order to recalculate prices.
-    $order->save();
+    $order->preSave(\Drupal::entityTypeManager()->getStorage('commerce_order'));
 
     // Refresh the order totals
     $response = new AjaxResponse();
     $response->addCommand(self::getOrderSummaryCommand($order));
-    $response->addCommand(new RefreshPageCommand());
 
     return $response;
   }
+
+  public static function validateAndSubmitShippingInformation(OrderInterface $order, array &$form, FormStateInterface $form_state) {
+    $pane_form = $form['shipping_information'];
+
+    $form_state->set('shipping_profile', $form['shipping_information']['shipping_profile']['#profile']);
+
+    // Save the modified shipments.
+    $shipments = [];
+    foreach (Element::children($pane_form['shipments']) as $index) {
+      /** @var \Drupal\commerce_shipping\Entity\ShipmentInterface $shipment */
+      $shipment = $pane_form['shipments'][$index]['#shipment'];
+      $shipment = $shipment->createDuplicate();
+      $form_display = EntityFormDisplay::collectRenderDisplay($shipment, 'default');
+      $form_display
+        ->removeComponent('shipping_profile')
+        ->removeComponent('title')
+        ->extractFormValues($shipment, $pane_form['shipments'][$index], $form_state);
+
+      $shipment
+        ->setShippingProfile($pane_form['shipping_profile']['#profile'])
+        ->save();
+
+      $shipments[] = $shipment;
+
+    }
+    $order->shipments = $shipments;
+  }
+
 }

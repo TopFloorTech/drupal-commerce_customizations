@@ -84,12 +84,11 @@ function commerce_customizations_field_widget_form_alter(&$element, \Drupal\Core
   if (isset($element['#entity_type']) && $element['#entity_type'] == 'commerce_shipment') {
     $element['#ajax'] = [
       'callback' => 'Drupal\commerce_customizations\CommerceShippingAjaxHelper::elementCallback',
-      'event' => 'click',
+      'event' => 'change',
       'progress' => [
         'type' => 'throbber',
         'message' => NULL,
       ],
     ];
-    $element['#attached']['library'][] = 'account_modal/account_modal';
   }
 }

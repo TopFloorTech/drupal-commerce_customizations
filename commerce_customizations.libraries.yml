@@ -2,7 +2,6 @@ payment-form:
   version: 1.0.6
   js:
     js/credit-card-form.js: {}
-    js/copy-address.js: {}
   dependencies:
     - core/drupal.ajax
 cart-form:

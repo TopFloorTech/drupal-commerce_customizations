@@ -43,13 +43,6 @@ class CheckoutEventSubscriber implements EventSubscriberInterface {
     }
 
     if (isset($form['payment_information']['add_payment_method'])) {
-      $form['payment_information']['add_payment_method']['copy_from_shipping'] = [
-        '#type' => 'checkbox',
-        '#title' => t('My billing address is the same as my shipping address'),
-        '#default_value' => TRUE,
-        '#weight' => -10,
-      ];
-
       $form['payment_information']['add_payment_method']['#after_build'][] = [$this, 'processPaymentInformation'];
     }
 
@@ -69,12 +62,22 @@ class CheckoutEventSubscriber implements EventSubscriberInterface {
       $element['payment_details']['expiration']['#weight'] = 0.003;
     }
 
-    if (isset($element['billing_information'])) {
-      $element['billing_information']['#states']['visible'] = [
-        ':input[name="payment_information[add_payment_method][copy_from_shipping]"]' => [
-          'checked' => FALSE,
-        ],
-      ];
+    if (isset($element['billing_information']['address'])) {
+      if ($element['billing_information']['address']['#access']) {
+        // @todo Uncomment once I get it working again.
+        /*$element['billing_information']['copy_from_shipping'] = [
+          '#type' => 'checkbox',
+          '#title' => t('My billing address is the same as my shipping address'),
+          '#default_value' => TRUE,
+          '#weight' => -10,
+        ];
+
+        $element['billing_information']['#states']['visible'] = [
+          ':input[name="payment_information[billing_information][copy_from_shipping]"]' => [
+            'checked' => FALSE,
+          ],
+        ];*/
+      }
     }
 
     $form_state->setValue('copy_from_shipping', TRUE);
