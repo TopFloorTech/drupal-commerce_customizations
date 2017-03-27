@@ -110,12 +110,24 @@ class CheckoutEventSubscriber implements EventSubscriberInterface {
           ],
           'totals' => $field,
           '#weight' => -1,
-          '#prefix' => '<div class="sales-tax-message">' . t('<strong>We collect sales tax in the following states: CT, GA, IL, and SC.</strong> If you are a tax exempt organization in one of these states, please call your order in otherwise you will be charged sales tax. Thank you.') . '</div>',
+          '#prefix' => $this->messageContent(),
         ];
       }
     }
 
     return $element;
+  }
+
+  protected function messageContent() {
+    $template = '<div class="payment-message"><p>%s</p></div>';
+
+    $output = [
+      "All orders are prepay and add shipping. If you would like to use your shipping carrier or number, please call us. Shipping quotes are generated automatically when you enter your address and may be updated manually with the button below.",
+      "<strong>Please Note:</strong> We only ship to USA addresses at this time. <strong>Orders placed AFTER 1:00 PM Eastern time are not guaranteed to ship same day and may be impacted by inventory levels.</strong> If you absolutely require faster ordering, <strong>please call us at 1-800-333-7467</strong>.",
+      "<strong>We collect sales tax in the following states: CT, GA, IL and SC.</strong> If you are a tax exempt organization in these states, please call your order in otherwise you will be charged sales tax. Thank you.",
+    ];
+
+    return sprintf($template, implode('</p><p>', $output));
   }
 
   protected function buildCreditCardFormIcons() {
