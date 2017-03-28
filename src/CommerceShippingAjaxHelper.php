@@ -52,7 +52,9 @@ class CommerceShippingAjaxHelper {
   public static function validateAndSubmitShippingInformation(OrderInterface $order, array &$form, FormStateInterface $form_state) {
     $pane_form = $form['shipping_information'];
 
-    $form_state->set('shipping_profile', $form['shipping_information']['shipping_profile']['#profile']);
+    /** @var \Drupal\profile\Entity\ProfileInterface $profile */
+    $profile = $pane_form['shipping_profile']['#profile'];
+    $profile = $profile->createDuplicate();
 
     // Save the modified shipments.
     $shipments = [];
@@ -67,11 +69,9 @@ class CommerceShippingAjaxHelper {
         ->extractFormValues($shipment, $pane_form['shipments'][$index], $form_state);
 
       $shipment
-        ->setShippingProfile($pane_form['shipping_profile']['#profile'])
-        ->save();
+        ->setShippingProfile($profile);
 
       $shipments[] = $shipment;
-
     }
     $order->shipments = $shipments;
   }
