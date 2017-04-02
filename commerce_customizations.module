@@ -53,27 +53,32 @@ function commerce_customizations_preprocess_commerce_order_receipt(&$variables) 
 function commerce_customizations_commerce_product_presave(Drupal\Core\Entity\EntityInterface $entity) {
   /** @var \Drupal\commerce_product\Entity\ProductInterface $entity */
 
-  if (!$entity->hasField('field_main_category')) {
-    return;
-  }
+  if ($entity->hasField('field_main_category')) {
+    $fields = [
+      'field_accessory_category',
+      'field_product_category',
+    ];
 
-  $fields = [
-    'field_accessory_category',
-    'field_product_category',
-  ];
+    $targetId = NULL;
 
-  $targetId = NULL;
+    foreach ($fields as $field) {
+      if ($entity->hasField($field) && !$entity->get($field)->isEmpty()) {
+        $targetId = $entity->get($field)->target_id;
 
-  foreach ($fields as $field) {
-    if ($entity->hasField($field) && !$entity->get($field)->isEmpty()) {
-      $targetId = $entity->get($field)->target_id;
+        break;
+      }
+    }
 
-      break;
+    if (!is_null($targetId)) {
+      $entity->get('field_main_category')->target_id = $targetId;
     }
   }
 
-  if (!is_null($targetId)) {
-    $entity->get('field_main_category')->target_id = $targetId;
+  if ($entity->hasField('field_is_product')) {
+    $entity->get('field_is_product')->value = (
+      $entity->hasField('field_product_category')
+      && !$entity->get('field_product_category')->isEmpty()
+    );
   }
 }
 
