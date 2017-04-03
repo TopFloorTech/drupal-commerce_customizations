@@ -2,6 +2,8 @@
 
 namespace Drupal\commerce_customizations\EventSubscriber;
 
+use Drupal\commerce_order\Event\OrderAssignEvent;
+use Drupal\commerce_order\Event\OrderEvents;
 use Drupal\hook_event_dispatcher\Event\Form\FormAlterEvent;
 use Drupal\hook_event_dispatcher\HookEventDispatcherEvents;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
@@ -91,6 +93,32 @@ class CartEventSubscriber implements EventSubscriberInterface {
     $event->setForm($form);
   }
 
+  public function onOrderAssign(OrderAssignEvent $event) {
+    $order = $event->getOrder();
+
+    // Return immediately if it's not a cart.
+    if ($order->get('cart')->isEmpty() || !$order->get('cart')->value) {
+      return;
+    }
+
+    /** @var \Drupal\commerce_cart\CartProviderInterface $cart_provider */
+    $cart_provider = \Drupal::service('commerce_cart.cart_provider');
+    $carts = $cart_provider->getCarts($event->getAccount());
+
+    if (!empty($carts)) {
+      $cart = array_shift($carts);
+
+      if ($order->id() != $cart->id()) {
+        foreach ($order->getItems() as $item) {
+          $cart->addItem($item);
+          $order->removeItem($item);
+        }
+
+        $cart->save();
+      }
+    }
+  }
+
   /**
    * @inheritdoc
    */
@@ -99,6 +127,7 @@ class CartEventSubscriber implements EventSubscriberInterface {
 
     $events[HookEventDispatcherEvents::FORM_ALTER][] = ['alterAddToCartForm'];
     $events[HookEventDispatcherEvents::FORM_ALTER][] = ['alterCartForm'];
+    $events[OrderEvents::ORDER_ASSIGN][] = ['onOrderAssign'];
 
     return $events;
   }
