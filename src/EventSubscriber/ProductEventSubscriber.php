@@ -11,13 +11,13 @@ use Drupal\commerce_price\Price;
 use Drupal\commerce_product\Event\ProductEvents;
 use Drupal\commerce_product\Event\ProductVariationAjaxChangeEvent;
 use Drupal\commerce_product\Event\ProductVariationEvent;
+use Drupal\Core\Ajax\InvokeCommand;
+use Drupal\Core\Ajax\RedirectCommand;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Drupal\commerce_cart\Event\CartEvents;
 use Drupal\commerce_cart\Event\OrderItemComparisonFieldsEvent;
 
 class ProductEventSubscriber implements EventSubscriberInterface {
-
-  var $fieldName = 'field_quote';
 
   /**
    * {@inheritdoc}
@@ -31,9 +31,8 @@ class ProductEventSubscriber implements EventSubscriberInterface {
   }
 
   public function onProductVariationAjaxChange(ProductVariationAjaxChangeEvent $event) {
-    $response = $event->getResponse();
-    $commands = $response->getCommands();
-
-    // TODO: Add command to reload product gallery JS after replacing image
+    $event
+      ->getResponse()
+      ->addCommand(new InvokeCommand('.ProductMediaGallery-largeImage a', 'swipebox'));
   }
 }
