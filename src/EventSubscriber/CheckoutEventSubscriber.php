@@ -47,7 +47,18 @@ class CheckoutEventSubscriber implements EventSubscriberInterface {
     }
 
     if (isset($form['contact_information'])) {
+      $form['contact_information']['#title'] = t('Email Address');
       $form['contact_information']['#weight'] = -20;
+    }
+
+    if (isset($form['review']['contact_information'])) {
+      $form['review']['contact_information']['#title'] = t('Email Address');
+    }
+
+    foreach (['shipping_information', 'billing_information'] as $fieldset) {
+      if (isset($form['review'][$fieldset])) {
+        $form['review'][$fieldset]['#title'] = str_replace(['(', ')'], '', $form['review'][$fieldset]['#title']);
+      }
     }
 
     $event->setForm($form);
