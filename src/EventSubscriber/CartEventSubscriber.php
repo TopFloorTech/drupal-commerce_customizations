@@ -25,27 +25,39 @@ class CartEventSubscriber implements EventSubscriberInterface {
 
     $form = $event->getForm();
 
-    if (!isset($form['purchased_entity']['widget'][0]['attributes'])) {
-      return;
+    foreach (['submit', 'quote'] as $button) {
+      if (isset($form['actions'][$button])) {
+        $form['actions'][$button]['#prefix'] = '<span class="CartButton CartButton--' . $button . '">';
+        $form['actions'][$button]['#suffix'] = '</span>';
+        $form['actions'][$button]['#attributes']['data-twig-suggestion'] = 'submit_button';
+      }
     }
 
-    $attributes = $form['purchased_entity']['widget'][0]['attributes'];
+    if (isset($form['quantity']['widget'][0]['value'])) {
+      $form['quantity']['widget'][0]['value']['#step'] = 1;
+    }
 
-    foreach ($attributes as $key => $element) {
-      if (strpos($key, 'attribute_') !== 0) {
-        continue;
-      }
+    if (isset($form['purchased_entity']['widget'][0]['attributes'])) {
+      $attributes = $form['purchased_entity']['widget'][0]['attributes'];
 
-      if (!empty($element['#options'])) {
-        if (count($element['#options']) == 1) {
-          $values = array_values($element['#options']);
+      foreach ($attributes as $key => $element) {
+        if (strpos($key, 'attribute_') !== 0) {
+          continue;
+        }
 
-          if ($values[0] == 'N/A' || $values[0] == 'Standard Version') {
-            $form['purchased_entity']['widget'][0]['attributes'][$key]['#access'] = FALSE;
+        if (!empty($element['#options'])) {
+          if (count($element['#options']) == 1) {
+            $values = array_values($element['#options']);
+
+            if ($values[0] == 'N/A' || $values[0] == 'Standard Version') {
+              $form['purchased_entity']['widget'][0]['attributes'][$key]['#access'] = FALSE;
+            }
           }
         }
       }
     }
+
+    $form['#after_build'][] = 'commerce_customizations_set_triggering_element';
 
     $event->setForm($form);
   }

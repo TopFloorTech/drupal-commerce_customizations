@@ -97,3 +97,16 @@ function commerce_customizations_field_widget_form_alter(&$element, \Drupal\Core
     ];
   }
 }
+
+function commerce_customizations_set_triggering_element(array $form, \Drupal\Core\Form\FormStateInterface $form_state) {
+  $input = $form_state->getUserInput();
+
+  foreach (['submit', 'quote'] as $button) {
+    if (isset($input[$button])) {
+      $form_state->setTriggeringElement($form['actions'][$button]);
+      break;
+    }
+  }
+
+  return $form;
+}
