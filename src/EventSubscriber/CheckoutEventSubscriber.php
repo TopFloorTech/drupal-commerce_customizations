@@ -55,9 +55,15 @@ class CheckoutEventSubscriber implements EventSubscriberInterface {
       $form['review']['contact_information']['#title'] = t('Email Address');
     }
 
-    foreach (['shipping_information', 'billing_information'] as $fieldset) {
+    foreach (['shipping_information', 'payment_information'] as $fieldset) {
       if (isset($form['review'][$fieldset])) {
         $form['review'][$fieldset]['#title'] = str_replace(['(', ')'], '', $form['review'][$fieldset]['#title']);
+      }
+    }
+
+    if ($event->getFormId() == 'commerce_checkout_flow_multistep_quote') {
+      if (isset($form['review']['shipping_information']['summary'][0]['shipment'])) {
+        $form['review']['shipping_information']['summary'][0]['shipment']['#access'] = FALSE;
       }
     }
 

@@ -26,6 +26,19 @@ function commerce_customizations_help($route_name, RouteMatchInterface $route_ma
 }
 
 /**
+ * Implements hook_theme_registry_alter().
+ */
+function commerce_customizations_theme_registry_alter(&$theme_registry) {
+  if (isset($theme_registry['commerce_order__admin'])) {
+    $theme_registry['commerce_order__admin']['path'] = drupal_get_path('module', 'commerce_customizations') . '/templates';
+  }
+
+  if (isset($theme_registry['commerce_order__user'])) {
+    $theme_registry['commerce_order__user']['path'] = drupal_get_path('module', 'commerce_customizations') . '/templates';
+  }
+}
+
+/**
  * Implements hook_preprocess_commerce_order_receipt().
  */
 function commerce_customizations_preprocess_commerce_order_receipt(&$variables) {
@@ -45,6 +58,14 @@ function commerce_customizations_preprocess_commerce_order_receipt(&$variables) 
   $dateFormatter = \Drupal::service('date.formatter');
 
   $variables['order_date'] = $dateFormatter->format($order->getPlacedTime(), 'short');
+}
+
+function commerce_customizations_preprocess_commerce_order(&$variables) {
+  /** @var \Drupal\commerce_order\Entity\OrderInterface $order */
+  $order = $variables['elements']['#commerce_order'];
+
+  $variables['order_url'] = '/user/' . $order->getCustomerId() . '/orders/' . $order->id();
+  $variables['field_comments'] = !$order->get('field_comments')->isEmpty() ? $order->get('field_comments')->value : '';
 }
 
 /**
