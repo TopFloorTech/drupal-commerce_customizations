@@ -105,8 +105,8 @@ class CheckoutEventSubscriber implements EventSubscriberInterface {
   protected function buildTotals(array $form) {
     $element = [];
 
-    if (isset($form['order_summary']['#arguments'][0])) {
-      $orderId = $form['order_summary']['#arguments'][0];
+    if (isset($form['sidebar']['order_summary']['view']['#arguments'][0])) {
+      $orderId = $form['sidebar']['order_summary']['view']['#arguments'][0];
 
       /** @var \Drupal\commerce_order\Entity\OrderInterface $order */
       $order = \Drupal::entityTypeManager()->getStorage('commerce_order')->load($orderId);
