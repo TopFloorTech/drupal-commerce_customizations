@@ -56,7 +56,5 @@ class ProductEventSubscriber implements EventSubscriberInterface {
     }
 
     $event->setTitle($title);
-
-    dpm($event->getTitle());
   }
 }
