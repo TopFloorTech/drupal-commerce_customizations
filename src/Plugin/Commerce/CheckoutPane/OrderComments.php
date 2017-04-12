@@ -10,7 +10,7 @@ use Drupal\Core\Form\FormStateInterface;
  *
  * @CommerceCheckoutPane(
  *   id = "order_comments",
- *   label = @Translation("Order comments"),
+ *   label = @Translation("Comments"),
  *   default_step = "review",
  *   wrapper_element = "fieldset",
  * )
