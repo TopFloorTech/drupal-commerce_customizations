@@ -2,7 +2,6 @@
 
 namespace Drupal\commerce_customizations;
 
-use Drupal\account_modal\AjaxCommand\RefreshPageCommand;
 use Drupal\commerce_order\Entity\OrderInterface;
 use Drupal\Core\Ajax\AjaxResponse;
 use Drupal\Core\Ajax\RedirectCommand;

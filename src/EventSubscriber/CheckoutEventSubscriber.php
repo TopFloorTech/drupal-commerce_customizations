@@ -35,6 +35,10 @@ class CheckoutEventSubscriber implements EventSubscriberInterface {
       $form['shipping_information']['recalculate_shipping']['#value'] = t('Show My Shipping Options');
 
       $form['#attached']['library'][] = 'commerce_customizations/shipping-form';
+
+      if (isset($form['shipping_information']['shipping_profile'])) {
+        $form['shipping_information']['shipping_profile']['#after_build'][] = [$this, 'processShippingInformation'];
+      }
     }
 
     if (isset($form['payment_information'])) {
@@ -68,6 +72,10 @@ class CheckoutEventSubscriber implements EventSubscriberInterface {
     }
 
     $event->setForm($form);
+  }
+
+  public function processShippingInformation(array $element, FormStateInterface $form_state) {
+    // @todo Force default country here if needed
   }
 
   public function processPaymentInformation(array $element, FormStateInterface $form_state) {
