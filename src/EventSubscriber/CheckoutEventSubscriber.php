@@ -76,6 +76,8 @@ class CheckoutEventSubscriber implements EventSubscriberInterface {
 
   public function processShippingInformation(array $element, FormStateInterface $form_state) {
     // @todo Force default country here if needed
+
+    return $element;
   }
 
   public function processPaymentInformation(array $element, FormStateInterface $form_state) {
