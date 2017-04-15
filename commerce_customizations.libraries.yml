@@ -11,7 +11,7 @@ cart-form:
   dependencies:
     - core/drupal.ajax
 shipping-form:
-  version: 1.0.2
+  version: 1.0.3
   js:
     js/shipping-form.js: {}
   dependencies:
