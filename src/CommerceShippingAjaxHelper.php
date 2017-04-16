@@ -4,9 +4,7 @@ namespace Drupal\commerce_customizations;
 
 use Drupal\commerce_order\Entity\OrderInterface;
 use Drupal\Core\Ajax\AjaxResponse;
-use Drupal\Core\Ajax\RedirectCommand;
 use Drupal\Core\Ajax\ReplaceCommand;
-use Drupal\Core\Entity\Entity;
 use Drupal\Core\Entity\Entity\EntityFormDisplay;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Element;
@@ -32,8 +30,6 @@ class CommerceShippingAjaxHelper {
       return;
     }
 
-    $order = clone $order;
-
     if (self::shippingMethodHasChanged($order, $form, $form_state)) {
       self::validateAndSubmitShippingInformation($order, $form, $form_state);
 
@@ -41,14 +37,39 @@ class CommerceShippingAjaxHelper {
       $order_refresh = \Drupal::service('commerce_order.order_refresh');
       $order_refresh->refresh($order);
 
-      $order->preSave(\Drupal::entityTypeManager()->getStorage('commerce_order'));
-
       // Refresh the order totals
       $response = new AjaxResponse();
       $response->addCommand(self::getOrderSummaryCommand($order));
 
+      self::updateFormValuesFromOrder($order, $form, $form_state);
+
+      $removed_shipments = (isset($form['shipping_information']['removed_shipments']['#value']))
+        ? $form['shipping_information']['removed_shipments']['#value']
+        : [];
+
+      foreach ($order->shipments as $shipment_item) {
+        /** @var \Drupal\commerce_shipping\Entity\ShipmentInterface $shipment */
+        $shipment = $shipment_item->entity;
+        $removed_shipments[] = $shipment->id();
+      }
+
+      $form['shipping_information']['removed_shipments']['#value'] = $removed_shipments;
+
       return $response;
     }
+  }
+
+  public static function updateFormValuesFromOrder(OrderInterface $order, array &$form, FormStateInterface $form_state) {
+    /** @var \Drupal\profile\Entity\ProfileInterface $profile */
+    $profile = NULL;
+
+    if (!empty($order->shipments)) {
+      /** @var \Drupal\commerce_shipping\Entity\ShipmentInterface $shipment */
+      $shipment = $order->shipments[0]->entity;
+      $profile = $shipment->getShippingProfile();
+    }
+
+    $form['shipping_information']['shipping_profile']['#profile'] = $profile;
   }
 
   public static function shippingMethodHasChanged(OrderInterface $order, array &$form, FormStateInterface $form_state) {
@@ -89,7 +110,7 @@ class CommerceShippingAjaxHelper {
 
     /** @var \Drupal\profile\Entity\ProfileInterface $profile */
     $profile = $pane_form['shipping_profile']['#profile'];
-    $profile = $profile->createDuplicate();
+    //$profile = $profile->createDuplicate();
 
     // Save the modified shipments.
     $shipments = [];
@@ -97,8 +118,8 @@ class CommerceShippingAjaxHelper {
       /** @var \Drupal\commerce_shipping\Entity\ShipmentInterface $shipment */
       $shipment = $pane_form['shipments'][$index]['#shipment'];
       $shipment = $shipment->createDuplicate();
-      $form_display = EntityFormDisplay::collectRenderDisplay($shipment, 'default');
-      $form_display
+
+      EntityFormDisplay::collectRenderDisplay($shipment, 'default')
         ->removeComponent('shipping_profile')
         ->removeComponent('title')
         ->extractFormValues($shipment, $pane_form['shipments'][$index], $form_state);
