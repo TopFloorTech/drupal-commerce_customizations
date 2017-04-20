@@ -128,15 +128,20 @@ function commerce_customizations_commerce_product_presave(Drupal\Core\Entity\Ent
  * Implements hook_field_widget_form_alter().
  */
 function commerce_customizations_field_widget_form_alter(&$element, \Drupal\Core\Form\FormStateInterface $form_state, $context) {
-  if (isset($element['#entity_type']) && $element['#entity_type'] == 'commerce_shipment') {
-    $element['#ajax'] = [
+  /** @var \Drupal\commerce_order\Entity\OrderInterface $order */
+  $order = \Drupal::routeMatch()->getParameter('commerce_order');
+
+  if (isset($element['#entity_type']) && $element['#entity_type'] == 'commerce_shipment' && \Drupal\commerce_quote_cart\QuoteCartHelper::isPurchaseCart($order)) {
+    // @todo: Uncomment and fix
+    /*$element['#ajax'] = [
       'callback' => 'Drupal\commerce_customizations\CommerceShippingAjaxHelper::elementCallback',
-      'event' => 'click',
+      'wrapper' => 'commerce-checkout-flow-wrapper',
       'progress' => [
         'type' => 'throbber',
-        'message' => t('Applying shipping method...'),
       ],
     ];
+
+    $element['#element_validate'][] = 'Drupal\commerce_customizations\CommerceShippingAjaxHelper::elementValidate';*/
   }
 }
 
@@ -151,4 +156,20 @@ function commerce_customizations_set_triggering_element(array $form, \Drupal\Cor
   }
 
   return $form;
+}
+
+/**
+ * Implements hook_mail_alter().
+ */
+function commerce_customizations_mail_alter(&$message) {
+  if ($message['id'] == 'commerce_order_receipt') {
+    /** @var \Drupal\commerce_order\Entity\OrderInterface $order */
+    $order = $message['params']['order'];
+
+    if (!\Drupal\commerce_quote_cart\QuoteCartHelper::isPurchaseCart($order)) {
+      $message['subject'] = t('Quote #@number confirmed', [
+        '@number' => $order->id(),
+      ]);
+    }
+  }
 }

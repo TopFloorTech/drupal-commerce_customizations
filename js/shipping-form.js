@@ -8,7 +8,7 @@
         var $method = $('input[name="shipping_information[shipments][0][shipping_method][0]"]:checked', context);
 
         if ($method.length > 0) {
-          $method.trigger('click');
+          $method.trigger('change');
           $body.addClass('js-shipping-triggered');
         }
       }

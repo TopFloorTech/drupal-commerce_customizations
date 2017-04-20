@@ -24,6 +24,9 @@ class CheckoutEventSubscriber implements EventSubscriberInterface {
       return;
     }
 
+    $form['#prefix'] = '<div id="commerce-checkout-flow-wrapper">';
+    $form['#suffix'] = '</div>';
+
     if (isset($form['actions']['next'])) {
       $form['actions']['next']['#attributes']['class'][] = 'CheckoutButton-input';
       $form['actions']['next']['#prefix'] = '<span class="CheckoutButton">';
