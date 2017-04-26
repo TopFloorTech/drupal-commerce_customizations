@@ -24,9 +24,6 @@ class CheckoutEventSubscriber implements EventSubscriberInterface {
       return;
     }
 
-    $form['#prefix'] = '<div id="commerce-checkout-flow-wrapper">';
-    $form['#suffix'] = '</div>';
-
     if (isset($form['actions']['next'])) {
       $form['actions']['next']['#attributes']['class'][] = 'CheckoutButton-input';
       $form['actions']['next']['#prefix'] = '<span class="CheckoutButton">';
@@ -36,8 +33,6 @@ class CheckoutEventSubscriber implements EventSubscriberInterface {
     if (isset($form['shipping_information'])) {
       $form['shipping_information']['#weight'] = -10;
       $form['shipping_information']['recalculate_shipping']['#value'] = t('Show My Shipping Options');
-
-      $form['#attached']['library'][] = 'commerce_customizations/shipping-form';
 
       if (isset($form['shipping_information']['shipping_profile'])) {
         $form['shipping_information']['shipping_profile']['#after_build'][] = [$this, 'processShippingInformation'];

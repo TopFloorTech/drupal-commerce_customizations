@@ -6,7 +6,7 @@
  */
 
 use Drupal\commerce_customizations\CommerceEmailHelper;
-use Drupal\commerce_customizations\CommerceShippingAjaxHelper;
+use Drupal\commerce_customizations\CommerceShippingAjax;
 use Drupal\commerce_shipping\Plugin\Field\FieldType\ShipmentItem;
 use Drupal\Core\Routing\RouteMatchInterface;
 
@@ -74,6 +74,10 @@ function commerce_customizations_preprocess_commerce_order_receipt(&$variables) 
   $variables['order_items'] = CommerceEmailHelper::orderItems($order);
   $variables['order_label'] = \Drupal\commerce_quote_cart\QuoteCartHelper::isPurchaseCart($order) ? t('Order') : t('Quote');
   $variables['is_quote'] = !\Drupal\commerce_quote_cart\QuoteCartHelper::isPurchaseCart($order);
+  $variables['order_email'] = $order->getEmail();
+  $variables['order_comments'] = !$order->get('field_comments')->isEmpty()
+    ? $order->get('field_comments')->value
+    : '';
 
   /** @var \Drupal\Core\Datetime\DateFormatterInterface $dateFormatter */
   $dateFormatter = \Drupal::service('date.formatter');
@@ -121,27 +125,6 @@ function commerce_customizations_commerce_product_presave(Drupal\Core\Entity\Ent
       $entity->hasField('field_product_category')
       && !$entity->get('field_product_category')->isEmpty()
     );
-  }
-}
-
-/**
- * Implements hook_field_widget_form_alter().
- */
-function commerce_customizations_field_widget_form_alter(&$element, \Drupal\Core\Form\FormStateInterface $form_state, $context) {
-  /** @var \Drupal\commerce_order\Entity\OrderInterface $order */
-  $order = \Drupal::routeMatch()->getParameter('commerce_order');
-
-  if (isset($element['#entity_type']) && $element['#entity_type'] == 'commerce_shipment' && \Drupal\commerce_quote_cart\QuoteCartHelper::isPurchaseCart($order)) {
-    // @todo: Uncomment and fix
-    /*$element['#ajax'] = [
-      'callback' => 'Drupal\commerce_customizations\CommerceShippingAjaxHelper::elementCallback',
-      'wrapper' => 'commerce-checkout-flow-wrapper',
-      'progress' => [
-        'type' => 'throbber',
-      ],
-    ];
-
-    $element['#element_validate'][] = 'Drupal\commerce_customizations\CommerceShippingAjaxHelper::elementValidate';*/
   }
 }
 
