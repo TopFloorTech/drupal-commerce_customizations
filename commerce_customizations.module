@@ -44,7 +44,7 @@ function commerce_customizations_get_customer_name(\Drupal\commerce_order\Entity
     /** @var \Drupal\commerce_shipping\Entity\ShipmentInterface $shipment */
     $shipment = $order->get('shipments')->first()->entity;
 
-    $profile = (\Drupal\commerce_quote_cart\QuoteCartHelper::isPurchaseCart())
+    $profile = (\Drupal\commerce_quote_cart\QuoteCartHelper::isPurchaseCart($order))
       ? $order->getBillingProfile()
       : $shipment->getShippingProfile();
 
