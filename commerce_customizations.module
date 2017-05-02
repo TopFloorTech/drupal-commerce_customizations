@@ -6,8 +6,6 @@
  */
 
 use Drupal\commerce_customizations\CommerceEmailHelper;
-use Drupal\commerce_customizations\CommerceShippingAjax;
-use Drupal\commerce_shipping\Plugin\Field\FieldType\ShipmentItem;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\views\Plugin\views\query\QueryPluginBase;
 use Drupal\views\ViewExecutable;
