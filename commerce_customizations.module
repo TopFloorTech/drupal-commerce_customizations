@@ -158,6 +158,27 @@ function commerce_customizations_mail_alter(&$message) {
 }
 
 /**
+ * Implements hook_views_pre_render().
+ */
+function commerce_customizations_views_pre_render(ViewExecutable $view) {
+  if ($view->id() == 'order_report_no_detail') {
+    if (!empty($view->footer)) {
+      foreach ($view->footer as $key => $area) {
+        if ($area instanceof \Drupal\views\Plugin\views\area\Text && isset($area->options['content']['value'])) {
+          $value = $area->options['content']['value'];
+          if (strpos($value, '.csv') !== FALSE) {
+            $query_string = \Drupal::request()->getQueryString();
+            if (!empty($query_string)) {
+              $area->options['content']['value'] = str_replace('.csv', '.csv?' . $query_string, $value);
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+/**
  * Implements hook_views_query_alter().
  */
 function commerce_customizations_views_query_alter(ViewExecutable $view, QueryPluginBase $query) {

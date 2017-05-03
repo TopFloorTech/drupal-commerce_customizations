@@ -30,6 +30,10 @@ class CheckoutEventSubscriber implements EventSubscriberInterface {
       $form['actions']['next']['#suffix'] = '</span>';
     }
 
+    if (isset($form['custom_text_order_information'])) {
+      $form['custom_text_order_information']['#weight'] = -30;
+    }
+
     if (isset($form['shipping_information'])) {
       $form['shipping_information']['#weight'] = -10;
       $form['shipping_information']['recalculate_shipping']['#value'] = t('Show My Shipping Options');

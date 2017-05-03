@@ -42,7 +42,7 @@ abstract class TextPaneBase extends CheckoutPaneBase {
 
     $form['text'] = [
       '#type' => 'text_format',
-      '#title' => $this->t('Text'),
+      '#title' => $this->t(''),
       '#format' => $this->configuration['format'],
       '#default_value' => $this->configuration['text'],
     ];
