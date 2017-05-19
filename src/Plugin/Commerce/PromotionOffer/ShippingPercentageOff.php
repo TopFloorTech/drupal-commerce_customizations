@@ -1,0 +1,54 @@
+<?php
+
+namespace Drupal\commerce_customizations\Plugin\Commerce\PromotionOffer;
+
+use Drupal\commerce_price\Price;
+use Drupal\commerce_promotion\Plugin\Commerce\PromotionOffer\PercentageOffBase;
+use Drupal\Core\Form\FormStateInterface;
+
+/**
+ * Provides an 'Order: Percentage off' condition.
+ *
+ * @CommercePromotionOffer(
+ *   id = "commerce_promotion_shipping_percentage_off",
+ *   label = @Translation("Percentage amount off of the shipping total"),
+ *   target_entity_type = "commerce_order",
+ * )
+ */
+class ShippingPercentageOff extends PercentageOffBase {
+
+  /**
+   * {@inheritdoc}
+   */
+  public function execute() {
+    $order = $this->getOrder();
+    $shipping_total = new Price('0.00', 'USD');
+    if ($order->hasField('shipments') && !$order->get('shipments')->isEmpty()) {
+      /** @var \Drupal\Core\Field\EntityReferenceFieldItemList $shipments */
+      $shipments = $order->get('shipments');
+
+      /** @var \Drupal\commerce_shipping\Entity\ShipmentInterface $shipment */
+      foreach ($shipments->referencedEntities() as $shipment) {
+        $amount = $shipment->getAmount();
+        if ($amount instanceof Price) {
+          $shipping_total->add($amount);
+        }
+      }
+    }
+
+    $adjustment_amount = $shipping_total->multiply($this->getAmount());
+    $adjustment_amount = $this->rounder->round($adjustment_amount);
+    $this->applyAdjustment($order, $adjustment_amount);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function validateConfigurationForm(array &$form, FormStateInterface $form_state) {
+    $values = $form_state->getValue($form['#parents']);
+    if (empty($values['amount']) && $values['amount'] != '0') {
+      $form_state->setError($form, $this->t('Percentage amount cannot be empty.'));
+    }
+  }
+
+}

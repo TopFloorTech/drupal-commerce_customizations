@@ -27,6 +27,13 @@ function commerce_customizations_help($route_name, RouteMatchInterface $route_ma
 }
 
 /**
+ * Implements hook_aluminum_storage_phone_numbers().
+ */
+function commerce_customizations_aluminum_storage_phone_numbers() {
+  return [];
+}
+
+/**
  * Implements hook_theme_registry_alter().
  */
 function commerce_customizations_theme_registry_alter(&$theme_registry) {
@@ -184,6 +191,17 @@ function commerce_customizations_views_pre_render(ViewExecutable $view) {
 function commerce_customizations_views_query_alter(ViewExecutable $view, QueryPluginBase $query) {
   switch ($view->id()) {
     case 'order_report_no_detail':
+      // Make sure the correct billing profile information is retrieved.
+      // Join to the commerce_order table instead of the user table for the profile id.
+      $profile_table = $query->getTableInfo('profile_users_field_data');
+
+      if (isset($profile_table['join'])) {
+        $profile_table['join']->field = 'profile_id';
+        $profile_table['join']->leftTable = 'commerce_order';
+        $profile_table['join']->leftField = 'billing_profile__target_id';
+      }
+      break;
+    case 'order_report_with_products':
       // Make sure the correct billing profile information is retrieved.
       // Join to the commerce_order table instead of the user table for the profile id.
       $profile_table = $query->getTableInfo('profile_users_field_data');

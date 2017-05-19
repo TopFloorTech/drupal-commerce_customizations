@@ -89,23 +89,12 @@ class CheckoutEventSubscriber implements EventSubscriberInterface {
       $element['payment_details']['number']['#prefix'] = $this->buildCreditCardFormIcons();
       $element['payment_details']['security_code']['#weight'] = 0.002;
       $element['payment_details']['expiration']['#weight'] = 0.003;
-    }
 
-    if (isset($element['billing_information']['address'])) {
-      if ($element['billing_information']['address']['#access']) {
-        // @todo Uncomment once I get it working again.
-        /*$element['billing_information']['copy_from_shipping'] = [
-          '#type' => 'checkbox',
-          '#title' => t('My billing address is the same as my shipping address'),
-          '#default_value' => TRUE,
-          '#weight' => -10,
-        ];
-
-        $element['billing_information']['#states']['visible'] = [
-          ':input[name="payment_information[billing_information][copy_from_shipping]"]' => [
-            'checked' => FALSE,
-          ],
-        ];*/
+      // Hide sensitive fields from Inspectlet
+      foreach (['number', 'security_code', 'expiration'] as $field) {
+        if (isset($element['payment_details'][$field])) {
+          $element['payment_details'][$field]['#attributes']['class'][] = 'inspectletIgnore';
+        }
       }
     }
 
