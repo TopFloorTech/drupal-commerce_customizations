@@ -88,8 +88,14 @@ function commerce_customizations_preprocess_commerce_order_receipt(&$variables) 
 
   /** @var \Drupal\Core\Datetime\DateFormatterInterface $dateFormatter */
   $dateFormatter = \Drupal::service('date.formatter');
-
   $variables['order_date'] = $dateFormatter->format($order->getPlacedTime(), 'short');
+
+  $variables['coupons'] = '';
+  if ($order->hasField('coupons') && !$order->get('coupons')->isEmpty()) {
+    $variables['coupons'] = \Drupal\commerce_customizations\CouponsTable::build($order);
+  }
+
+  $test = 'here';
 }
 
 function commerce_customizations_preprocess_commerce_order(&$variables) {
