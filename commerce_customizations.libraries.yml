@@ -10,3 +10,8 @@ cart-form:
     js/cart-form.js: {}
   dependencies:
     - core/drupal.ajax
+profile-form:
+  version: 1.0.0
+  js:
+    js/address-form.js: {}
+  dependencies:

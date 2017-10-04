@@ -46,6 +46,7 @@ class CheckoutEventSubscriber implements EventSubscriberInterface {
     if (isset($form['payment_information'])) {
       $form['totals'] = $this->buildTotals($form);
       $form['#attached']['library'][] = 'commerce_customizations/payment-form';
+      $form['#attached']['library'][] = 'commerce_customizations/profile-form';
     }
 
     if (isset($form['payment_information']['add_payment_method'])) {
@@ -71,6 +72,11 @@ class CheckoutEventSubscriber implements EventSubscriberInterface {
       if (isset($form['review']['shipping_information']['summary'][0]['shipment'])) {
         $form['review']['shipping_information']['summary'][0]['shipment']['#access'] = FALSE;
       }
+      $form['#attached']['library'][] = 'commerce_customizations/profile-form';
+    }
+
+    if ($event->getFormId() == 'commerce_checkout_flow_multistep_order') {
+      $form['#attached']['library'][] = 'commerce_customizations/profile-form';
     }
 
     $event->setForm($form);
