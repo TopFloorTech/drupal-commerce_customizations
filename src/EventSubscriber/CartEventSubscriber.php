@@ -19,7 +19,7 @@ class CartEventSubscriber implements EventSubscriberInterface {
    * @param \Drupal\hook_event_dispatcher\Event\Form\FormAlterEvent $event
    */
   public function alterAddToCartForm(FormAlterEvent $event) {
-    if (strpos($event->getFormId(), 'commerce_order_item_default_add_to_cart_') !== 0) {
+    if (strpos($event->getFormId(), 'commerce_order_item_add_to_cart_form') !== 0) {
       return;
     }
 
