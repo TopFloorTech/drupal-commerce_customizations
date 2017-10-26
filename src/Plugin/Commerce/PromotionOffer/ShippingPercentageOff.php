@@ -30,13 +30,14 @@ class ShippingPercentageOff extends PercentageOffBase {
       /** @var \Drupal\commerce_shipping\Entity\ShipmentInterface $shipment */
       foreach ($shipments->referencedEntities() as $shipment) {
         $amount = $shipment->getAmount();
+
         if ($amount instanceof Price) {
-          $shipping_total->add($amount);
+          $shipping_total = $shipping_total->add($amount);
         }
       }
     }
 
-    $adjustment_amount = $shipping_total->multiply($this->getAmount());
+    $adjustment_amount = $shipping_total->multiply((string) $this->getAmount());
     $adjustment_amount = $this->rounder->round($adjustment_amount);
     $this->applyAdjustment($order, $adjustment_amount);
   }
