@@ -1,9 +1,11 @@
 <?php
 
-namespace Drupal\commerce_customizations\Plugin\Commerce\PromotionCondition;
+namespace Drupal\commerce_customizations\Plugin\Commerce\Condition;
 
+use Drupal\commerce\Plugin\Commerce\Condition\ConditionBase;
+use Drupal\commerce_order\Entity\OrderInterface;
 use Drupal\commerce_product\Entity\ProductVariationInterface;
-use Drupal\commerce_promotion\Plugin\Commerce\PromotionCondition\PromotionConditionBase;
+use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
 
 /**
@@ -12,10 +14,11 @@ use Drupal\Core\Form\FormStateInterface;
  * @CommercePromotionCondition(
  *   id = "commerce_promotion_order_contains_product",
  *   label = @Translation("Contains product"),
+ *   display_label = @Translation("Limit by certain product(s) in order"),
  *   target_entity_type = "commerce_order",
  * )
  */
-class OrderContainsProduct extends PromotionConditionBase {
+class OrderContainsProduct extends ConditionBase {
 
   /**
    * {@inheritdoc}
@@ -71,10 +74,10 @@ class OrderContainsProduct extends PromotionConditionBase {
   /**
    * {@inheritdoc}
    */
-  public function evaluate() {
+  public function evaluate(EntityInterface $entity) {
     $products = $this->configuration['included_products'];
-    /** @var \Drupal\commerce_order\Entity\OrderInterface $order */
-    $order = $this->getTargetEntity();
+    /** @var OrderInterface $order */
+    $order = $entity;
 
     $match = FALSE;
 
@@ -90,13 +93,6 @@ class OrderContainsProduct extends PromotionConditionBase {
     }
 
     return $match;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function summary() {
-    return $this->t('Checks if at least one of the specified products is in the order.');
   }
 
 }
