@@ -2,8 +2,12 @@
 
 namespace Drupal\commerce_customizations\Plugin\Commerce\PromotionOffer;
 
+use Drupal\commerce_order\Adjustment;
+use Drupal\commerce_order\Entity\OrderInterface;
 use Drupal\commerce_price\Price;
+use Drupal\commerce_promotion\Entity\PromotionInterface;
 use Drupal\commerce_promotion\Plugin\Commerce\PromotionOffer\PercentageOffBase;
+use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
 
 /**
@@ -20,8 +24,24 @@ class ShippingPercentageOff extends PercentageOffBase {
   /**
    * {@inheritdoc}
    */
-  public function execute() {
-    $order = $this->getOrder();
+  public function apply(EntityInterface $entity, PromotionInterface $promotion) {
+    $this->assertEntity($entity);
+    /** @var \Drupal\commerce_order\Entity\OrderInterface $order */
+    $order = $entity;
+    $shipping_total = $this->getShippingTotal($order);
+    $adjustment_amount = $shipping_total->multiply((string) $this->getPercentage());
+    $adjustment_amount = $this->rounder->round($adjustment_amount);
+
+    $order->addAdjustment(new Adjustment([
+      'type' => 'promotion',
+      'label' => t('Shipping Discount'),
+      'amount' => $adjustment_amount->multiply('-1'),
+      'percentage' => $this->getPercentage(),
+      'source_id' => $promotion->id(),
+    ]));
+  }
+
+  protected function getShippingTotal(OrderInterface $order) {
     $shipping_total = new Price('0.00', 'USD');
     if ($order->hasField('shipments') && !$order->get('shipments')->isEmpty()) {
       /** @var \Drupal\Core\Field\EntityReferenceFieldItemList $shipments */
@@ -37,9 +57,7 @@ class ShippingPercentageOff extends PercentageOffBase {
       }
     }
 
-    $adjustment_amount = $shipping_total->multiply((string) $this->getAmount());
-    $adjustment_amount = $this->rounder->round($adjustment_amount);
-    $this->applyAdjustment($order, $adjustment_amount);
+    return $shipping_total;
   }
 
   /**
