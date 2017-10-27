@@ -1,6 +1,7 @@
 <?php
 
 namespace Drupal\commerce_customizations\Plugin\Commerce\CheckoutFlow;
+
 use Drupal\commerce\Response\NeedsRedirectException;
 use Drupal\commerce_checkout\Plugin\Commerce\CheckoutFlow\MultistepDefault;
 use Drupal\commerce_quote_cart\QuoteCartHelper;
@@ -73,4 +74,5 @@ class MultistepOrder extends MultistepDefault {
 
     return $options;
   }
+
 }

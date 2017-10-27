@@ -39,4 +39,5 @@ class OrderComments extends CheckoutPaneBase {
     $values = $form_state->getValue($pane_form['#parents']);
     $this->order->get('field_comments')->value = $values['comments'];
   }
+
 }

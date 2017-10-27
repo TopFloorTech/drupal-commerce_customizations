@@ -6,6 +6,7 @@ use Drupal\commerce_order\Adjustment;
 use Drupal\commerce_order\Entity\OrderInterface;
 
 class CouponsTable {
+
   /**
    * Adjustments table builder.
    *
@@ -28,12 +29,14 @@ class CouponsTable {
         $adjustments = array_merge($adjustments, $item_adjustments);
       }
     }
+
     $promotion_ids = array_map(function (Adjustment $adjustment) {
       return $adjustment->getSourceId();
     }, $adjustments);
 
     /** @var \Drupal\commerce_promotion\Entity\CouponInterface[] $coupons */
     $coupons = $order->get('coupons')->referencedEntities();
+
     if (empty($coupons) || empty($adjustments)) {
       return $table;
     }

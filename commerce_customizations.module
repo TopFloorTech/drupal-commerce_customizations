@@ -46,6 +46,17 @@ function commerce_customizations_theme_registry_alter(&$theme_registry) {
   }
 }
 
+/**
+ * Gets the customer name from the provided order.
+ *
+ * @param \Drupal\commerce_order\Entity\OrderInterface $order
+ *   The order.
+ *
+ * @return \Drupal\Component\Render\MarkupInterface|mixed|string
+ *   The customer name as markup or a string.
+ *
+ * @throws \Drupal\Core\TypedData\Exception\MissingDataException
+ */
 function commerce_customizations_get_customer_name(\Drupal\commerce_order\Entity\OrderInterface $order) {
   if ($order->getCustomer()->isAnonymous()) {
     /** @var \Drupal\commerce_shipping\Entity\ShipmentInterface $shipment */
@@ -76,9 +87,9 @@ function commerce_customizations_preprocess_commerce_order_receipt(&$variables) 
 
   $shipping_data = \Drupal::service('commerce_shipping.order_shipment_summary')->build($order);
 
-  if (isset($shipping_data['shipping_profile']['#profile'])) {
+  if (isset($shipping_data['shipping_profile']['#default_value'])) {
     /** @var \Drupal\profile\Entity\ProfileInterface $shipping_profile */
-    $shipping_profile = $shipping_data['shipping_profile']['#profile'];
+    $shipping_profile = $shipping_data['shipping_profile']['#default_value'];
 
     $variables['shipping_info'] = commerce_customizations_expand_profile_variables($shipping_profile);
   } else {
@@ -116,6 +127,15 @@ function commerce_customizations_preprocess_commerce_order_receipt(&$variables) 
 
 }
 
+/**
+ * @param \Drupal\profile\Entity\ProfileInterface $profile
+ *   The profile.
+ *
+ * @return array
+ *   The expanded profile variables.
+ *
+ * @throws \Drupal\Core\TypedData\Exception\MissingDataException
+ */
 function commerce_customizations_expand_profile_variables(\Drupal\profile\Entity\ProfileInterface $profile) {
   /** @var \Drupal\address\Plugin\Field\FieldType\AddressItem $address */
   $address = $profile->get('address')->first();
@@ -243,32 +263,32 @@ function commerce_customizations_views_pre_render(ViewExecutable $view) {
 /**
  * Implements hook_views_query_alter().
  */
-function commerce_customizations_views_query_alter(ViewExecutable $view, QueryPluginBase $query) {
-  switch ($view->id()) {
-    case 'order_report_no_detail':
-      // Make sure the correct billing profile information is retrieved.
-      // Join to the commerce_order table instead of the user table for the profile id.
-      $profile_table = $query->getTableInfo('profile_users_field_data');
-
-      if (isset($profile_table['join'])) {
-        $profile_table['join']->field = 'profile_id';
-        $profile_table['join']->leftTable = 'commerce_order';
-        $profile_table['join']->leftField = 'billing_profile__target_id';
-      }
-      break;
-    case 'order_report_with_products':
-      // Make sure the correct billing profile information is retrieved.
-      // Join to the commerce_order table instead of the user table for the profile id.
-      $profile_table = $query->getTableInfo('profile_users_field_data');
-
-      if (isset($profile_table['join'])) {
-        $profile_table['join']->field = 'profile_id';
-        $profile_table['join']->leftTable = 'commerce_order';
-        $profile_table['join']->leftField = 'billing_profile__target_id';
-      }
-      break;
-  }
-}
+//function commerce_customizations_views_query_alter(ViewExecutable $view, QueryPluginBase $query) {
+//  switch ($view->id()) {
+//    case 'order_report_no_detail':
+//      // Make sure the correct billing profile information is retrieved.
+//      // Join to the commerce_order table instead of the user table for the profile id.
+//      $profile_table = $query->getTableInfo('profile_users_field_data');
+//
+//      if (isset($profile_table['join'])) {
+//        $profile_table['join']->field = 'profile_id';
+//        $profile_table['join']->leftTable = 'commerce_order';
+//        $profile_table['join']->leftField = 'billing_profile__target_id';
+//      }
+//      break;
+//    case 'order_report_with_products':
+//      // Make sure the correct billing profile information is retrieved.
+//      // Join to the commerce_order table instead of the user table for the profile id.
+//      $profile_table = $query->getTableInfo('profile_users_field_data');
+//
+//      if (isset($profile_table['join'])) {
+//        $profile_table['join']->field = 'profile_id';
+//        $profile_table['join']->leftTable = 'commerce_order';
+//        $profile_table['join']->leftField = 'billing_profile__target_id';
+//      }
+//      break;
+//  }
+//}
 
 /**
  * Implements hook_commerce_google_analytics_transaction_alter().

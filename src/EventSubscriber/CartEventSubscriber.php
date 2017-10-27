@@ -2,8 +2,6 @@
 
 namespace Drupal\commerce_customizations\EventSubscriber;
 
-use Drupal\commerce_order\Event\OrderAssignEvent;
-use Drupal\commerce_order\Event\OrderEvents;
 use Drupal\hook_event_dispatcher\Event\Form\FormAlterEvent;
 use Drupal\hook_event_dispatcher\HookEventDispatcherEvents;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;

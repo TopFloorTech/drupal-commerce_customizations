@@ -82,4 +82,5 @@ abstract class TextPaneBase extends CheckoutPaneBase {
       '#format' => $this->configuration['format'],
     ];
   }
+
 }

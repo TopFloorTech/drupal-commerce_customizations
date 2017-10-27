@@ -3,9 +3,6 @@
 namespace Drupal\commerce_customizations;
 
 use Drupal\commerce_order\Entity\OrderInterface;
-use Drupal\Core\Ajax\AjaxResponse;
-use Drupal\Core\Ajax\InsertCommand;
-use Drupal\Core\Ajax\ReplaceCommand;
 use Drupal\Core\Entity\Entity\EntityFormDisplay;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Element;
@@ -19,6 +16,8 @@ class CommerceShippingAjaxHelper {
    *   The form element.
    * @param \Drupal\Core\Form\FormStateInterface $form_state
    *   The current state of the form.
+   *
+   * @throws \Drupal\Core\Entity\EntityStorageException
    */
   public static function elementValidate(array $element, FormStateInterface $form_state) {
     /** @var OrderInterface $order */

@@ -3,10 +3,8 @@
 namespace Drupal\commerce_customizations;
 
 use Drupal\commerce_order\Entity\OrderInterface;
-use Drupal\commerce_order\Entity\OrderItemInterface;
 use Drupal\commerce_product\Entity\ProductVariationInterface;
 use Drupal\Core\Url;
-use Drupal\file\Entity\File;
 use Drupal\image\Entity\ImageStyle;
 
 class CommerceEmailHelper {
@@ -45,4 +43,5 @@ class CommerceEmailHelper {
 
     return $url->toString();
   }
+
 }
