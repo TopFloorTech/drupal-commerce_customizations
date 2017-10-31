@@ -44,7 +44,7 @@ class CheckoutEventSubscriber implements EventSubscriberInterface {
     }
 
     if (isset($form['payment_information'])) {
-      $form['totals'] = $this->buildTotals($form);
+      //$form['totals'] = $this->buildTotals($form);
       $form['#attached']['library'][] = 'commerce_customizations/payment-form';
       $form['#attached']['library'][] = 'commerce_customizations/profile-form';
     }
