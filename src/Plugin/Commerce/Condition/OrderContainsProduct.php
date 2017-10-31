@@ -11,11 +11,12 @@ use Drupal\Core\Form\FormStateInterface;
 /**
  * Provides an 'Order: Contains product' condition.
  *
- * @CommercePromotionCondition(
+ * @CommerceCondition(
  *   id = "commerce_promotion_order_contains_product",
  *   label = @Translation("Contains product"),
  *   display_label = @Translation("Limit by certain product(s) in order"),
- *   target_entity_type = "commerce_order",
+ *   category = @Translation("Product"),
+ *   entity_type = "commerce_order",
  * )
  */
 class OrderContainsProduct extends ConditionBase {

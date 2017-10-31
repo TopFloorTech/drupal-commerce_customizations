@@ -65,7 +65,7 @@ class ShippingPercentageOff extends PercentageOffBase {
    */
   public function validateConfigurationForm(array &$form, FormStateInterface $form_state) {
     $values = $form_state->getValue($form['#parents']);
-    if (empty($values['amount']) && $values['amount'] != '0') {
+    if (empty($values['percentage']) && $values['percentage'] != '0') {
       $form_state->setError($form, $this->t('Percentage amount cannot be empty.'));
     }
   }
