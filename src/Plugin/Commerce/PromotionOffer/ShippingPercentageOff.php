@@ -16,7 +16,7 @@ use Drupal\Core\Form\FormStateInterface;
  * @CommercePromotionOffer(
  *   id = "commerce_promotion_shipping_percentage_off",
  *   label = @Translation("Percentage amount off of the shipping total"),
- *   target_entity_type = "commerce_order",
+ *   entity_type = "commerce_order",
  * )
  */
 class ShippingPercentageOff extends PercentageOffBase {
