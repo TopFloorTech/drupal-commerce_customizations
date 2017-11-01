@@ -61,6 +61,10 @@ class CheckoutEventSubscriber implements EventSubscriberInterface {
     if (isset($form['review']['contact_information'])) {
       $form['review']['contact_information']['#title'] = t('Email Address');
     }
+    
+    if (isset($form['sidebar']['coupon_redemption'])) {
+      $form['sidebar']['coupon_redemption']['#type'] = 'fieldset';
+    }
 
     foreach (['shipping_information', 'payment_information'] as $fieldset) {
       if (isset($form['review'][$fieldset])) {
