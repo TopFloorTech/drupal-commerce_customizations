@@ -24,6 +24,21 @@ class MultistepOrder extends MultistepDefault {
   public function getSteps() {
     $steps = parent::getSteps();
 
+    $steps = [
+      'login' => $steps['login'],
+      'order_information' => $steps['order_information'],
+      'billing_information' => [
+        'label' => $this->t('Billing information'),
+        'next_label' => $this->t('Continue to billing'),
+        'previous_label' => $this->t('Go back'),
+        'has_sidebar' => TRUE,
+      ],
+      'review' => $steps['review'],
+      'payment' => $steps['payment'],
+      'complete' => $steps['complete']
+    ];
+
+    //$steps['order_information']['label'] = $this->t('Shipping info');
     $steps['payment']['label'] = $this->t('Place Order');
 
     return $steps;

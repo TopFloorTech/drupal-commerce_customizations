@@ -35,6 +35,7 @@ class CheckoutEventSubscriber implements EventSubscriberInterface {
     }
 
     if (isset($form['shipping_information'])) {
+      $form['#attached']['library'][] = 'commerce_customizations/profile-form';
       $form['shipping_information']['#weight'] = -10;
       $form['shipping_information']['recalculate_shipping']['#value'] = t('Show My Shipping Options');
 
@@ -93,8 +94,14 @@ class CheckoutEventSubscriber implements EventSubscriberInterface {
   }
 
   public function processPaymentInformation(array $element, FormStateInterface $form_state) {
+    $element['#sorted'] = FALSE;
+
+    if (isset($element['billing_information'])) {
+      $element['billing_information']['#weight'] = -15;
+    }
+
     if (isset($element['payment_details'])) {
-      $element['payment_details']['#weight'] = -15;
+      $element['payment_details']['#weight'] = -10;
       $element['payment_details']['#sorted'] = FALSE;
       $element['payment_details']['number']['#prefix'] = $this->buildCreditCardFormIcons();
       $element['payment_details']['security_code']['#weight'] = 0.002;
