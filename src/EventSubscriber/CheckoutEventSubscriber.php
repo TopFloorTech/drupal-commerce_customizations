@@ -59,6 +59,13 @@ class CheckoutEventSubscriber implements EventSubscriberInterface {
       $form['contact_information']['#weight'] = -20;
     }
 
+    if (!isset($form['review']) && isset($form['sidebar']['coupon_redemption']['coupons'])) {
+      $form['sidebar']['coupon_redemption']['coupons'] = [
+        '#type' => 'markup',
+        '#markup' => '<p class="CouponMessage">' . t('Got a coupon code? You can enter it on the Review page.') . '</p>',
+      ];
+    }
+
     if (isset($form['review']['contact_information'])) {
       $form['review']['contact_information']['#title'] = t('Email Address');
     }
@@ -80,9 +87,7 @@ class CheckoutEventSubscriber implements EventSubscriberInterface {
       $form['#attached']['library'][] = 'commerce_customizations/profile-form';
     }
 
-    if ($event->getFormId() == 'commerce_checkout_flow_multistep_order') {
-      $form['#attached']['library'][] = 'commerce_customizations/profile-form';
-    }
+    $form['#attached']['library'][] = 'commerce_customizations/profile-form';
 
     $event->setForm($form);
   }
