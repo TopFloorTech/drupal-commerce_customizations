@@ -184,9 +184,8 @@ class CheckoutEventSubscriber implements EventSubscriberInterface {
     $template = '<div class="payment-message"><p>%s</p></div>';
 
     $output = [
-      "All orders are prepay and add shipping. If you would like to use your shipping carrier or number, please call us. Shipping quotes are generated automatically when you enter your address and may be updated manually with the button below.",
-      "<strong>Please Note:</strong> We only ship to USA addresses at this time. <strong>Orders placed AFTER 1:00 PM Eastern time are not guaranteed to ship same day and may be impacted by inventory levels.</strong> If you absolutely require faster ordering, <strong>please call us at 1-800-333-7467</strong>.",
-      "<strong>We collect sales tax in the following states: CT, GA, IL and SC.</strong> If you are a tax exempt organization in these states, please call your order in otherwise you will be charged sales tax. Thank you.",
+      "All orders are prepay and add shipping using ground service. For expedited shipping or collect service, please call us. Please Note: We only ship to US & Canada addresses at this time. Orders placed AFTER 1:00 PM Eastern time are not guaranteed to ship same day For more information please call us.",
+      "<strong>We collect sales tax in the following states: CT, GA, IL and SC.</strong> If you are a tax exempt organization in these states, please call your order in otherwise you will be charged sales tax.",
     ];
 
     return sprintf($template, implode('</p><p>', $output));
