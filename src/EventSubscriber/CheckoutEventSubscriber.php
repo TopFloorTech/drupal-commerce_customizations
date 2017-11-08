@@ -2,6 +2,9 @@
 
 namespace Drupal\commerce_customizations\EventSubscriber;
 
+use Drupal\commerce_shipping\Entity\ShipmentInterface;
+use Drupal\commerce_shipping\OrderShipmentSummary;
+use Drupal\commerce_shipping\OrderShipmentSummaryInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\hook_event_dispatcher\Event\Form\FormAlterEvent;
 use Drupal\hook_event_dispatcher\HookEventDispatcherEvents;
@@ -37,6 +40,7 @@ class CheckoutEventSubscriber implements EventSubscriberInterface {
     if (isset($form['shipping_information'])) {
       $form['#attached']['library'][] = 'commerce_customizations/profile-form';
       $form['shipping_information']['#weight'] = -10;
+      $form['totals'] = $this->buildShippingMessage();
       $form['shipping_information']['recalculate_shipping']['#value'] = t('Show My Shipping Options');
 
       if (isset($form['shipping_information']['shipping_profile'])) {
@@ -45,7 +49,6 @@ class CheckoutEventSubscriber implements EventSubscriberInterface {
     }
 
     if (isset($form['payment_information'])) {
-      //$form['totals'] = $this->buildTotals($form);
       $form['#attached']['library'][] = 'commerce_customizations/payment-form';
       $form['#attached']['library'][] = 'commerce_customizations/profile-form';
     }
@@ -120,7 +123,26 @@ class CheckoutEventSubscriber implements EventSubscriberInterface {
       }
     }
 
-    $form_state->setValue('copy_from_shipping', TRUE);
+    if (!empty($element['billing_information']['reuse_profile']['#value'])) {
+      /** @var \Drupal\commerce_order\Entity\OrderInterface $order */
+      $order = \Drupal::routeMatch()->getParameter('commerce_order');
+
+      /** @var OrderShipmentSummaryInterface $summary */
+      $summary = \Drupal::service('commerce_shipping.order_shipment_summary');
+
+      $element['billing_information']['shipping_profile'] = $summary->build($order);
+      $element['billing_information']['shipping_profile']['#weight'] = 20;
+    }
+
+    return $element;
+  }
+
+  protected function buildShippingMessage() {
+    $element = [
+      '#type' => 'markup',
+      '#markup' => $this->messageContent(),
+      '#weight' => -1,
+    ];
 
     return $element;
   }
