@@ -2,8 +2,6 @@
 
 namespace Drupal\commerce_customizations\EventSubscriber;
 
-use Drupal\commerce_shipping\Entity\ShipmentInterface;
-use Drupal\commerce_shipping\OrderShipmentSummary;
 use Drupal\commerce_shipping\OrderShipmentSummaryInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\hook_event_dispatcher\Event\Form\FormAlterEvent;
@@ -28,9 +26,10 @@ class CheckoutEventSubscriber implements EventSubscriberInterface {
     }
 
     if (isset($form['actions']['next'])) {
+      $old_suffix = isset($form['actions']['next']['#suffix']) ? $form['actions']['next']['#suffix'] : '';
       $form['actions']['next']['#attributes']['class'][] = 'CheckoutButton-input';
       $form['actions']['next']['#prefix'] = '<span class="CheckoutButton">';
-      $form['actions']['next']['#suffix'] = '</span>';
+      $form['actions']['next']['#suffix'] = '</span>' . $old_suffix;
     }
 
     if (isset($form['custom_text_order_information'])) {
@@ -147,6 +146,12 @@ class CheckoutEventSubscriber implements EventSubscriberInterface {
     return $element;
   }
 
+  /**
+   * @param array $form
+   *
+   * @return array
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   */
   protected function buildTotals(array $form) {
     $element = [];
 
