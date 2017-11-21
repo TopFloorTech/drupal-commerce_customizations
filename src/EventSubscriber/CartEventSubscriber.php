@@ -23,12 +23,10 @@ class CartEventSubscriber implements EventSubscriberInterface {
 
     $form = $event->getForm();
 
-    foreach (['submit', 'quote'] as $button) {
-      if (isset($form['actions'][$button])) {
-        $form['actions'][$button]['#prefix'] = '<span class="CartButton CartButton--' . $button . '">';
-        $form['actions'][$button]['#suffix'] = '</span>';
-        $form['actions'][$button]['#attributes']['data-twig-suggestion'] = 'submit_button';
-      }
+    if (isset($form['actions']['submit'])) {
+      $form['actions']['submit']['#prefix'] = '<span class="CartButton CartButton--submit">';
+      $form['actions']['submit']['#suffix'] = '</span>';
+      $form['actions']['submit']['#attributes']['data-twig-suggestion'] = 'submit_button';
     }
 
     if (isset($form['quantity']['widget'][0]['value'])) {
@@ -54,8 +52,6 @@ class CartEventSubscriber implements EventSubscriberInterface {
         }
       }
     }
-
-    $form['#after_build'][] = 'commerce_customizations_set_triggering_element';
 
     $event->setForm($form);
   }

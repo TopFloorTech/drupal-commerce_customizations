@@ -205,19 +205,6 @@ function commerce_customizations_commerce_product_presave(Drupal\Core\Entity\Ent
   }
 }
 
-function commerce_customizations_set_triggering_element(array $form, \Drupal\Core\Form\FormStateInterface $form_state) {
-  $input = $form_state->getUserInput();
-
-  foreach (['submit', 'quote'] as $button) {
-    if (isset($input[$button])) {
-      $form_state->setTriggeringElement($form['actions'][$button]);
-      break;
-    }
-  }
-
-  return $form;
-}
-
 /**
  * Implements hook_mail_alter().
  */
@@ -259,36 +246,6 @@ function commerce_customizations_views_pre_render(ViewExecutable $view) {
     }
   }
 }
-
-/**
- * Implements hook_views_query_alter().
- */
-//function commerce_customizations_views_query_alter(ViewExecutable $view, QueryPluginBase $query) {
-//  switch ($view->id()) {
-//    case 'order_report_no_detail':
-//      // Make sure the correct billing profile information is retrieved.
-//      // Join to the commerce_order table instead of the user table for the profile id.
-//      $profile_table = $query->getTableInfo('profile_users_field_data');
-//
-//      if (isset($profile_table['join'])) {
-//        $profile_table['join']->field = 'profile_id';
-//        $profile_table['join']->leftTable = 'commerce_order';
-//        $profile_table['join']->leftField = 'billing_profile__target_id';
-//      }
-//      break;
-//    case 'order_report_with_products':
-//      // Make sure the correct billing profile information is retrieved.
-//      // Join to the commerce_order table instead of the user table for the profile id.
-//      $profile_table = $query->getTableInfo('profile_users_field_data');
-//
-//      if (isset($profile_table['join'])) {
-//        $profile_table['join']->field = 'profile_id';
-//        $profile_table['join']->leftTable = 'commerce_order';
-//        $profile_table['join']->leftField = 'billing_profile__target_id';
-//      }
-//      break;
-//  }
-//}
 
 /**
  * Implements hook_commerce_google_analytics_transaction_alter().
