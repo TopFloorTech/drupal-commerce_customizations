@@ -71,7 +71,7 @@ class CheckoutEventSubscriber implements EventSubscriberInterface {
     if (isset($form['review']['contact_information'])) {
       $form['review']['contact_information']['#title'] = t('Email Address');
     }
-    
+
     if (isset($form['sidebar']['coupon_redemption'])) {
       $form['sidebar']['coupon_redemption']['#type'] = 'fieldset';
     }
@@ -82,7 +82,7 @@ class CheckoutEventSubscriber implements EventSubscriberInterface {
       }
     }
 
-    if ($event->getFormId() == 'commerce_checkout_flow_multistep_quote') {
+    if ($event->getFormId() === 'commerce_checkout_flow_multistep_quote') {
       if (isset($form['review']['shipping_information']['summary'][0]['shipment'])) {
         $form['review']['shipping_information']['summary'][0]['shipment']['#access'] = FALSE;
       }
@@ -137,13 +137,11 @@ class CheckoutEventSubscriber implements EventSubscriberInterface {
   }
 
   protected function buildShippingMessage() {
-    $element = [
+    return [
       '#type' => 'markup',
       '#markup' => $this->messageContent(),
       '#weight' => -1,
     ];
-
-    return $element;
   }
 
   /**
@@ -189,8 +187,8 @@ class CheckoutEventSubscriber implements EventSubscriberInterface {
     $template = '<div class="payment-message"><p>%s</p></div>';
 
     $output = [
-      "All orders are prepay and add shipping using ground service. For expedited shipping or collect service, please call us. Please Note: We only ship to US & Canada addresses at this time. Orders placed AFTER 1:00 PM Eastern time are not guaranteed to ship same day For more information please call us.",
-      "<strong>We collect sales tax in the following states: CT, GA, IL and SC.</strong> If you are a tax exempt organization in these states, please call your order in otherwise you will be charged sales tax.",
+      'All orders are prepay and add shipping using ground service. For expedited shipping or collect service, please call us. Please Note: We only ship to US & Canada addresses at this time. Orders placed AFTER 1:00 PM Eastern time are not guaranteed to ship same day For more information please call us.',
+      '<strong>We collect sales tax in the following states: CT, GA, IL and SC.</strong> If you are a tax exempt organization in these states, please call your order in otherwise you will be charged sales tax.',
     ];
 
     return sprintf($template, implode('</p><p>', $output));

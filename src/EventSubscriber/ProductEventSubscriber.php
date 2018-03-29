@@ -23,9 +23,8 @@ class ProductEventSubscriber implements EventSubscriberInterface {
   }
 
   public function onProductVariationAjaxChange(ProductVariationAjaxChangeEvent $event) {
-    $event
-      ->getResponse()
-      ->addCommand(new InvokeCommand('.ProductMediaGallery-largeImage a', 'swipebox'));
+    $command = new InvokeCommand('.ProductMediaGallery-largeImage a', 'swipebox');
+    $event->getResponse()->addCommand($command);
   }
 
   public function onProductVariationTitleGenerate(ProductVariationTitleGenerateEvent $event) {
@@ -35,7 +34,7 @@ class ProductEventSubscriber implements EventSubscriberInterface {
       return;
     }
 
-    list($title, $parts) = explode(' - ', $title);
+    [$title, $parts] = explode(' - ', $title);
 
     $parts = array_filter(explode(', ', $parts), function ($part) {
       return trim($part) !== 'N/A';

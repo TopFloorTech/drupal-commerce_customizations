@@ -41,13 +41,11 @@ class CartEventSubscriber implements EventSubscriberInterface {
           continue;
         }
 
-        if (!empty($element['#options'])) {
-          if (count($element['#options']) == 1) {
-            $values = array_values($element['#options']);
+        if (!empty($element['#options']) && \count($element['#options']) === 1) {
+          $values = array_values($element['#options']);
 
-            if ($values[0] == 'N/A' || $values[0] == 'Standard Version') {
-              $form['purchased_entity']['widget'][0]['attributes'][$key]['#access'] = FALSE;
-            }
+          if ($values[0] === 'N/A' || $values[0] === 'Standard Version') {
+            $form['purchased_entity']['widget'][0]['attributes'][$key]['#access'] = FALSE;
           }
         }
       }
