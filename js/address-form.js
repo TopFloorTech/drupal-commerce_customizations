@@ -6,11 +6,10 @@
     '.Field--name-field-job-title'
   ];
 
-  var familyNameClasses = [
-    'div.family-name',
-    'span.family-name',
-    '.form-item-shipping-information-shipping-profile-address-0-address-family-name',
-    '.form-item-payment-information-add-payment-method-billing-information-address-0-address-family-name'
+  var companyClasses = [
+    '.form-item-address-0-address-organization',
+    '.form-item-shipping-information-shipping-profile-address-0-address-organization',
+    '.form-item-payment-information-add-payment-method-billing-information-address-0-address-organization'
   ];
 
   Drupal.behaviors.commerceCustomizationsJobTitle = {
@@ -19,8 +18,8 @@
         var parent = $(this).parent();
 
         $(this)
-            .detach()
-            .insertAfter($(familyNameClasses.join(', '), parent));
+          .detach()
+          .insertBefore($(companyClasses.join(', '), parent));
       });
 
       $('.Field--name-field-job-title .Field-label', context).remove();

@@ -251,3 +251,11 @@ function commerce_customizations_views_pre_render(ViewExecutable $view) {
     }
   }
 }
+
+/**
+ * Implements hook_form_alter().
+ */
+function commerce_customizations_form_profile_customer_edit_form_alter(&$form, \Drupal\Core\Form\FormStateInterface $form_state, $form_id)
+{
+  $form['#attached']['library'][] = 'commerce_customizations/profile-form';
+}

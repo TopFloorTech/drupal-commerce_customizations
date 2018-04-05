@@ -37,7 +37,6 @@ class CheckoutEventSubscriber implements EventSubscriberInterface {
     }
 
     if (isset($form['shipping_information'])) {
-      $form['#attached']['library'][] = 'commerce_customizations/profile-form';
       $form['shipping_information']['#weight'] = -10;
       $form['totals'] = $this->buildShippingMessage();
       $form['shipping_information']['recalculate_shipping']['#value'] = t('Show My Shipping Options');
@@ -49,7 +48,6 @@ class CheckoutEventSubscriber implements EventSubscriberInterface {
 
     if (isset($form['payment_information'])) {
       $form['#attached']['library'][] = 'commerce_customizations/payment-form';
-      $form['#attached']['library'][] = 'commerce_customizations/profile-form';
     }
 
     if (isset($form['payment_information']['add_payment_method'])) {
@@ -61,12 +59,13 @@ class CheckoutEventSubscriber implements EventSubscriberInterface {
       $form['contact_information']['#weight'] = -20;
     }
 
-    if (!isset($form['review']) && isset($form['sidebar']['coupon_redemption']['coupons'])) {
-      $form['sidebar']['coupon_redemption']['coupons'] = [
-        '#type' => 'markup',
-        '#markup' => '<p class="CouponMessage">' . t('Got a coupon code? You can enter it on the Review page.') . '</p>',
-      ];
-    }
+    // @todo Remove this code once we're sure it's no longer needed
+//    if (!isset($form['review']) && isset($form['sidebar']['coupon_redemption']['coupons'])) {
+//      $form['sidebar']['coupon_redemption']['coupons'] = [
+//        '#type' => 'markup',
+//        '#markup' => '<p class="CouponMessage">' . t('Got a coupon code? You can enter it on the Review page.') . '</p>',
+//      ];
+//    }
 
     if (isset($form['review']['contact_information'])) {
       $form['review']['contact_information']['#title'] = t('Email Address');
