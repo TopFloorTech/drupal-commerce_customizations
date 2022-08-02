@@ -7,13 +7,13 @@
 
 use Drupal\commerce_customizations\CommerceEmailHelper;
 use Drupal\Core\Routing\RouteMatchInterface;
-use Drupal\views\Plugin\views\query\QueryPluginBase;
 use Drupal\views\ViewExecutable;
 
 /**
  * Implements hook_help().
  */
-function commerce_customizations_help($route_name, RouteMatchInterface $route_match) {
+function commerce_customizations_help($route_name, RouteMatchInterface $route_match)
+{
   if ($route_name === 'help.page.commerce_customizations') {
     $output = '';
     $output .= '<h3>' . t('About') . '</h3>';
@@ -25,14 +25,16 @@ function commerce_customizations_help($route_name, RouteMatchInterface $route_ma
 /**
  * Implements hook_aluminum_storage_phone_numbers().
  */
-function commerce_customizations_aluminum_storage_phone_numbers() {
+function commerce_customizations_aluminum_storage_phone_numbers()
+{
   return [];
 }
 
 /**
  * Implements hook_theme_registry_alter().
  */
-function commerce_customizations_theme_registry_alter(&$theme_registry) {
+function commerce_customizations_theme_registry_alter(&$theme_registry)
+{
   if (isset($theme_registry['commerce_order__admin'])) {
     $theme_registry['commerce_order__admin']['path'] = drupal_get_path('module', 'commerce_customizations') . '/templates';
   }
@@ -51,7 +53,8 @@ function commerce_customizations_theme_registry_alter(&$theme_registry) {
  * @return \Drupal\Component\Render\MarkupInterface|mixed|string
  *   The customer name as markup or a string.
  */
-function commerce_customizations_get_customer_name(\Drupal\commerce_order\Entity\OrderInterface $order) {
+function commerce_customizations_get_customer_name(\Drupal\commerce_order\Entity\OrderInterface $order)
+{
   try {
     $customer = $order->getCustomer();
 
@@ -84,31 +87,13 @@ function commerce_customizations_get_customer_name(\Drupal\commerce_order\Entity
 /**
  * Implements hook_preprocess_commerce_order_receipt().
  */
-function commerce_customizations_preprocess_commerce_order_receipt(&$variables) {
-
+function commerce_customizations_preprocess_commerce_order_receipt(&$variables)
+{
   /** @var Drupal\commerce_order\Entity\OrderInterface $order */
   $order = $variables['order_entity'];
 
-  $shipping_data = \Drupal::service('commerce_shipping.order_shipment_summary')->build($order);
-
-  if (isset($shipping_data['shipping_profile']['#default_value'])) {
-    /** @var \Drupal\profile\Entity\ProfileInterface $shipping_profile */
-    $shipping_profile = $shipping_data['shipping_profile']['#default_value'];
-
-    $variables['shipping_info'] = commerce_customizations_expand_profile_variables($shipping_profile);
-  } else {
-    $variables['shipping_info'] = [];
-  }
-
-  if (!$order->get('billing_profile')->isEmpty()) {
-    /** @var \Drupal\profile\Entity\ProfileInterface $billing_profile */
-    $billing_profile = $order->get('billing_profile')->entity;
-
-    $variables['billing_info'] = commerce_customizations_expand_profile_variables($billing_profile);
-  } else {
-    $variables['billing_info'] = [];
-  }
-
+  $variables['shipping_info'] = commerce_customizations_expand_shipping_info($order);
+  $variables['billing_info'] = commerce_customizations_expand_billing_info($order);
   $variables['customer_name'] = commerce_customizations_get_customer_name($order);
   $variables['site_url'] = \Drupal\Core\Url::fromRoute('<front>')->setAbsolute(TRUE)->toString();
   $variables['support_url'] = CommerceEmailHelper::nodeUrl(51);
@@ -131,6 +116,40 @@ function commerce_customizations_preprocess_commerce_order_receipt(&$variables) 
 
 }
 
+function commerce_customizations_expand_billing_info(\Drupal\commerce_order\Entity\OrderInterface $order)
+{
+  $billing_info = [];
+
+  if (!$order->get('billing_profile')->isEmpty()) {
+    /** @var \Drupal\profile\Entity\ProfileInterface $billing_profile */
+    $billing_profile = $order->get('billing_profile')->entity;
+    $billing_info = commerce_customizations_expand_profile_variables($billing_profile);
+  }
+
+  return $billing_info;
+}
+
+function commerce_customizations_expand_shipping_info(\Drupal\commerce_order\Entity\OrderInterface $order)
+{
+  $shipping_info = [];
+  $shipping_data = \Drupal::service('commerce_shipping.order_shipment_summary')->build($order);
+
+  if (isset($shipping_data['shipping_profile']['#profile'])) {
+    /** @var \Drupal\profile\Entity\ProfileInterface $shipping_profile */
+    $shipping_profile = $shipping_data['shipping_profile']['#profile'];
+    $shipping_info = commerce_customizations_expand_profile_variables($shipping_profile);
+  }
+
+  /** @var \Drupal\commerce_shipping\Entity\ShipmentInterface $shipment */
+  $shipment = $shipping_data[0]['shipment']['#commerce_shipment'];
+  $shipping_service = $shipment->getShippingService();
+  $services = $shipment->getShippingMethod()->getPlugin()->getServices();
+  $service = $services[$shipping_service]->getLabel();
+  $shipping_info['method'] = $service;
+
+  return $shipping_info;
+}
+
 /**
  * @param \Drupal\profile\Entity\ProfileInterface $profile
  *   The profile.
@@ -138,7 +157,8 @@ function commerce_customizations_preprocess_commerce_order_receipt(&$variables) 
  * @return array
  *   The expanded profile variables.
  */
-function commerce_customizations_expand_profile_variables(\Drupal\profile\Entity\ProfileInterface $profile) {
+function commerce_customizations_expand_profile_variables(\Drupal\profile\Entity\ProfileInterface $profile)
+{
   try {
     /** @var \Drupal\address\Plugin\Field\FieldType\AddressItem $address */
     $address = $profile->get('address')->first();
@@ -168,9 +188,18 @@ function commerce_customizations_expand_profile_variables(\Drupal\profile\Entity
   }
 }
 
-function commerce_customizations_preprocess_commerce_order(&$variables) {
+function commerce_customizations_preprocess_commerce_order(&$variables)
+{
   /** @var \Drupal\commerce_order\Entity\OrderInterface $order */
   $order = $variables['elements']['#commerce_order'];
+
+  unset($variables['order']['order_items']);
+
+  $variables['order']['order_items']['view'] = [
+    '#type' => 'view',
+    '#name' => 'commerce_order_item_table',
+    '#arguments' => [$order->id()],
+  ];
 
   $variables['order_url'] = '/user/' . $order->getCustomerId() . '/orders/' . $order->id();
   $variables['field_comments'] = !$order->get('field_comments')->isEmpty() ? $order->get('field_comments')->value : '';
@@ -179,7 +208,8 @@ function commerce_customizations_preprocess_commerce_order(&$variables) {
 /**
  * Implements hook_entity_presave().
  */
-function commerce_customizations_commerce_product_presave(Drupal\Core\Entity\EntityInterface $entity) {
+function commerce_customizations_commerce_product_presave(Drupal\Core\Entity\EntityInterface $entity)
+{
   /** @var \Drupal\commerce_product\Entity\ProductInterface $entity */
 
   if ($entity->hasField('field_main_category')) {
@@ -214,7 +244,8 @@ function commerce_customizations_commerce_product_presave(Drupal\Core\Entity\Ent
 /**
  * Implements hook_mail_alter().
  */
-function commerce_customizations_mail_alter(&$message) {
+function commerce_customizations_mail_alter(&$message)
+{
   if ($message['id'] === 'commerce_order_receipt') {
     /** @var \Drupal\commerce_order\Entity\OrderInterface $order */
     $order = $message['params']['order'];
@@ -228,28 +259,87 @@ function commerce_customizations_mail_alter(&$message) {
 }
 
 /**
+ * Implements hook_views_pre_build().
+ */
+function commerce_customizations_views_pre_build(ViewExecutable $view) {
+  if ($view->id() == 'unpublished_products_with_published_translations') {
+    /** @var \Drupal\views\Plugin\views\argument\NumericArgument $argument */
+    //$argument = $view->argument['product_id'];
+
+    $view->args[0] = commerce_customizations_get_unpublished_product_ids_with_published_translations();
+  }
+}
+
+function commerce_customizations_get_unpublished_product_ids_with_published_translations() {
+  $enQuery = \Drupal::entityQuery('commerce_product')
+    ->condition('status', 0)
+    ->condition('langcode', 'en');
+
+  $enResult = $enQuery->execute();
+
+  if (empty($enResult)) {
+    return '';
+  }
+
+  $enIds = array_keys($enResult);
+
+  $esQuery = \Drupal::entityQuery('commerce_product')
+    ->condition('status', 1)
+    ->condition('langcode', 'es');
+
+  $esResult = $esQuery->execute();
+
+  if (empty($esResult)) {
+    return '';
+  }
+
+  $esIds = array_keys($esResult);
+
+  $ids = array_intersect($enIds, $esIds);
+
+  return implode('+', $ids);
+}
+
+/**
  * Implements hook_views_pre_render().
  */
-function commerce_customizations_views_pre_render(ViewExecutable $view) {
+function commerce_customizations_views_pre_render(ViewExecutable $view)
+{
   $view_ids = [
-    'order_report_no_detail',
     'order_report',
+    'order_report_no_detail',
     'order_report_products',
+    'variation_pricing',
+    'contact_messages',
   ];
 
   if (!empty($view->footer) && in_array($view->id(), $view_ids, FALSE)) {
     foreach ($view->footer as $key => $area) {
       if ($area instanceof \Drupal\views\Plugin\views\area\Text && isset($area->options['content']['value'])) {
-        $value = $area->options['content']['value'];
-        if (strpos($value, '.csv') !== FALSE) {
-          $query_string = \Drupal::request()->getQueryString();
-          if (!empty($query_string)) {
-            $area->options['content']['value'] = str_replace('.csv', '.csv?' . $query_string, $value);
-          }
-        }
+        $area->options['content']['value'] = commerce_customizations_append_query_string_for_csv($area->options['content']['value']);
       }
     }
   }
+}
+
+function commerce_customizations_append_query_string_for_csv($value) {
+  if (strpos($value, '.csv') === FALSE) {
+    return $value;
+  }
+
+  $search = '.csv';
+  $replacement = '.csv?_format=csv';
+
+  if (\Drupal::request()->getQueryString() !== null) {
+    $replacement .= '&' . \Drupal::request()->getQueryString();
+  }
+
+  if (strpos($value, '.csv?') !== FALSE) {
+    $search = '.csv?';
+    $replacement .= '&';
+  }
+
+  return str_replace($search, $replacement, $value);
 }
 
 /**
@@ -258,4 +348,91 @@ function commerce_customizations_views_pre_render(ViewExecutable $view) {
 function commerce_customizations_form_profile_customer_edit_form_alter(&$form, \Drupal\Core\Form\FormStateInterface $form_state, $form_id)
 {
   $form['#attached']['library'][] = 'commerce_customizations/profile-form';
+}
+
+/**
+ * Implements hook_field_widget_form_alter().
+ */
+function commerce_customizations_field_widget_form_alter(&$element, \Drupal\Core\Form\FormStateInterface $form_state, $context)
+{
+  $autofillMap = [
+    'field_job_title' => 'organization-title',
+    'field_phone_number' => 'tel',
+  ];
+
+  /** @var \Drupal\Core\Field\WidgetInterface $widget */
+  $widget = $context['widget'];
+
+  /** @var \Drupal\Core\Field\FieldItemListInterface $items */
+  $items = $context['items'];
+
+  $fieldName = $items->getName();
+
+  if (array_key_exists($fieldName, $autofillMap)) {
+    $element['value']['#attributes']['autocomplete'] = $autofillMap[$fieldName];
+  }
+
+  if ($widget->getPluginId() === 'address_default') {
+    $element['address']['#process'][] = [\Drupal\address\Element\Address::class, 'processAddress'];
+    $element['address']['#process'][] = [\Drupal\address\Element\Address::class, 'processGroup'];
+    $element['address']['#process'][] = 'commerce_customizations_process_address';
+  }
+}
+
+function commerce_customizations_process_address($element, \Drupal\Core\Form\FormStateInterface $form_state, $form)
+{
+  $element['organization']['#required'] = TRUE;
+
+  $type = $element['#parents'][0] === 'shipping_information' ? 'shipping' : 'billing';
+
+  $autofillMap = [
+    'country_code' => 'country',
+    'given_name' => 'given-name',
+    'family_name' => 'family-name',
+    'organization' => 'organization',
+    'address_line1' => 'address-line1',
+    'address_line2' => 'address-line2',
+    'locality' => 'locality',
+    'administrative_area' => 'region',
+    'postal_code' => 'postal-code',
+  ];
+
+  foreach ($autofillMap as $field => $value) {
+    if (array_key_exists($field, $element)) {
+      $element[$field]['#attributes']['autocomplete'] = "$type $value";
+    }
+  }
+
+  return $element;
+}
+
+function commerce_customizations_preprocess_commerce_product_variation(&$variables) {
+  /** @var \Drupal\commerce_product\Entity\ProductVariationInterface $variation */
+  $variation = $variables['product_variation_entity'];
+  $variables['variation_url'] = $variation->toUrl();
+}
+
+// @todo move this to a separate module
+/**
+ * Implements hook_preprocess_video_embed_iframe().
+ */
+function commerce_customizations_preprocess_video_embed_iframe__youtube(&$variables) {
+  $variables['query']['enablejsapi'] = 1;
+}
+
+/**
+ * Implements hook_mail().
+ */
+function commerce_customizations_mail($key, &$message, $params) {
+  $options = [
+    'langcode' => $message['langcode'],
+  ];
+
+  switch ($key) {
+    case 'out_of_stock_alert':
+      $message['from'] = Drupal::config('system.site')->get('mail');
+      $message['subject'] = t('Item out of stock: @sku', ['@sku' => $params['sku']], $options);
+      $message['body'][] = $params['message'];
+      break;
+  }
 }

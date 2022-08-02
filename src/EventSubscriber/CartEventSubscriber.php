@@ -2,6 +2,7 @@
 
 namespace Drupal\commerce_customizations\EventSubscriber;
 
+use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\hook_event_dispatcher\Event\Form\FormAlterEvent;
 use Drupal\hook_event_dispatcher\HookEventDispatcherEvents;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
@@ -12,6 +13,8 @@ use Symfony\Component\EventDispatcher\EventSubscriberInterface;
  * @package Drupal\commerce_customizations\EventSubscriber
  */
 class CartEventSubscriber implements EventSubscriberInterface {
+
+  use StringTranslationTrait;
 
   /**
    * @param \Drupal\hook_event_dispatcher\Event\Form\FormAlterEvent $event
@@ -27,6 +30,7 @@ class CartEventSubscriber implements EventSubscriberInterface {
       $form['actions']['submit']['#prefix'] = '<span class="CartButton CartButton--submit">';
       $form['actions']['submit']['#suffix'] = '</span>';
       $form['actions']['submit']['#attributes']['data-twig-suggestion'] = 'submit_button';
+      $form['actions']['submit']['#value'] = $this->t('Buy Now');
     }
 
     if (isset($form['quantity']['widget'][0]['value'])) {

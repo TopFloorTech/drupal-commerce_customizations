@@ -6,7 +6,8 @@ use Drupal\commerce_order\Adjustment;
 use Drupal\commerce_order\Entity\OrderInterface;
 use Drupal\commerce_price\Price;
 use Drupal\commerce_promotion\Entity\PromotionInterface;
-use Drupal\commerce_promotion\Plugin\Commerce\PromotionOffer\PercentageOffBase;
+use Drupal\commerce_promotion\Plugin\Commerce\PromotionOffer\OrderPromotionOfferBase;
+use Drupal\commerce_promotion\Plugin\Commerce\PromotionOffer\PercentageOffTrait;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
 
@@ -19,7 +20,9 @@ use Drupal\Core\Form\FormStateInterface;
  *   entity_type = "commerce_order",
  * )
  */
-class ShippingPercentageOff extends PercentageOffBase {
+class ShippingPercentageOff extends OrderPromotionOfferBase {
+
+  use PercentageOffTrait;
 
   /**
    * {@inheritdoc}

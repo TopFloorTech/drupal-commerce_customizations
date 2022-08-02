@@ -5,6 +5,7 @@ namespace Drupal\commerce_customizations;
 use Drupal\commerce_order\Entity\OrderInterface;
 use Drupal\commerce_product\Entity\ProductVariationInterface;
 use Drupal\Core\Url;
+use Drupal\file\FileInterface;
 use Drupal\image\Entity\ImageStyle;
 
 class CommerceEmailHelper {
@@ -14,16 +15,18 @@ class CommerceEmailHelper {
     foreach ($order->getItems() as $item) {
       /** @var \Drupal\commerce_product\Entity\ProductVariationInterface $variation */
       $variation = $item->getPurchasedEntity();
+      $itemId = $item->id();
 
-      $items[$item->id()] = [
+      $items[$itemId] = [
         'item' => $item,
-        'id' => $item->id(),
+        'id' => $itemId,
         'title' => $variation->getProduct()->getTitle(),
         'url' => $variation->toUrl('canonical')->setAbsolute(TRUE)->toString(),
         'sku' => $variation->getSku(),
         'image' => self::productImageUrl($variation),
         'quantity' => $item->getQuantity(),
-        'price' => $item->getTotalPrice()
+        'price' => $item->getTotalPrice(),
+        'is_quote' => $item->get('field_quote')->value
       ];
     }
 
@@ -31,9 +34,23 @@ class CommerceEmailHelper {
   }
 
   public static function productImageUrl(ProductVariationInterface $variation) {
-    $image = $variation->get('field_image')->entity->getFileUri();
+    $imageField = $variation->get('field_image');
 
-    return ImageStyle::load('email')->buildUrl($image);
+    $uri = '';
+
+    if (!$imageField->isEmpty() && $variation->get('field_image')->entity instanceof FileInterface) {
+      $entity = $variation->get('field_image')->entity;
+
+      if ($entity instanceof FileInterface) {
+        $uri = $entity->getFileUri();
+      }
+    }
+
+    if (!empty($uri)) {
+      $uri = ImageStyle::load('email')->buildUrl($uri);
+    }
+
+    return $uri;
   }
 
   public static function nodeUrl($nid, $options = []) {

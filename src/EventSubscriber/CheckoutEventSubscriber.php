@@ -6,6 +6,8 @@ use Drupal\commerce_shipping\OrderShipmentSummaryInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\hook_event_dispatcher\Event\Form\FormAlterEvent;
 use Drupal\hook_event_dispatcher\HookEventDispatcherEvents;
+use Drupal\state_machine\Event\WorkflowTransitionEvent;
+use Drupal\commerce_product\Entity\ProductVariationInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 /**
@@ -14,6 +16,12 @@ use Symfony\Component\EventDispatcher\EventSubscriberInterface;
  * @package Drupal\commerce_customizations\EventSubscriber
  */
 class CheckoutEventSubscriber implements EventSubscriberInterface {
+  /**
+   * Debug mode.
+   *
+   * @var boolean
+   */
+  protected $debug = FALSE;
 
   /**
    * @param \Drupal\hook_event_dispatcher\Event\Form\FormAlterEvent $event
@@ -60,12 +68,12 @@ class CheckoutEventSubscriber implements EventSubscriberInterface {
     }
 
     // @todo Remove this code once we're sure it's no longer needed
-//    if (!isset($form['review']) && isset($form['sidebar']['coupon_redemption']['coupons'])) {
-//      $form['sidebar']['coupon_redemption']['coupons'] = [
-//        '#type' => 'markup',
-//        '#markup' => '<p class="CouponMessage">' . t('Got a coupon code? You can enter it on the Review page.') . '</p>',
-//      ];
-//    }
+    //    if (!isset($form['review']) && isset($form['sidebar']['coupon_redemption']['coupons'])) {
+    //      $form['sidebar']['coupon_redemption']['coupons'] = [
+    //        '#type' => 'markup',
+    //        '#markup' => '<p class="CouponMessage">' . t('Got a coupon code? You can enter it on the Review page.') . '</p>',
+    //      ];
+    //    }
 
     if (isset($form['review']['contact_information'])) {
       $form['review']['contact_information']['#title'] = t('Email Address');
@@ -186,8 +194,8 @@ class CheckoutEventSubscriber implements EventSubscriberInterface {
     $template = '<div class="payment-message"><p>%s</p></div>';
 
     $output = [
-      'All orders are prepay and add shipping using ground service. For expedited shipping or collect service, please call us. Please Note: We only ship to US & Canada addresses at this time. Orders placed AFTER 1:00 PM Eastern time are not guaranteed to ship same day For more information please call us.',
-      '<strong>We collect sales tax in the following states: CT, GA, IL and SC.</strong> If you are a tax exempt organization in these states, please call your order in otherwise you will be charged sales tax.',
+      t('All orders are prepay and add shipping using ground service. For expedited shipping or collect service, please call us. Please Note: We only ship to US & Canada addresses at this time. Orders placed AFTER 1:00 PM Eastern time are not guaranteed to ship same day For more information please call us.'),
+      '<strong>' . t('We collect sales tax in the following states: CT, GA, IL and SC.') . '</strong> ' . t('If you are a tax exempt organization in these states, please call your order in otherwise you will be charged sales tax.'),
     ];
 
     return sprintf($template, implode('</p><p>', $output));
@@ -224,7 +232,78 @@ class CheckoutEventSubscriber implements EventSubscriberInterface {
       HookEventDispatcherEvents::FORM_ALTER => [
         ['alterCheckoutForm'],
       ],
+      'commerce_order.place.post_transition' => [
+         ['checkStockLevel'],
+      ]
     ];
+  }
+
+  /**
+   *
+   */
+  public function checkStockLevel(WorkflowTransitionEvent $event) {
+    $order = $event->getEntity();
+    $items = $order->getItems(); // @var \Drupal\commerce_order\Entity\OrderInterface $order
+
+    foreach ($items as $item) {
+      // @var \Drupal\commerce_product\Entity\ProductVariationInterface $product
+      $product = $item->getPurchasedEntity();
+      $quantity = $item->getQuantity();
+
+      $alwaysInStockField = 'commerce_stock_always_in_stock';
+      $alwaysInStock = FALSE;
+      if ($product->hasField($alwaysInStockField) && !$product->get($alwaysInStockField)
+          ->isEmpty()) {
+        $alwaysInStock = (bool) $product->get($alwaysInStockField)->value;
+      }
+
+      if ($product->hasField('field_stock_level') && !$product->get('field_stock_level')->isEmpty()) {
+        $stockServiceManager = \Drupal::service('commerce_stock.service_manager');
+        $stock = intval($stockServiceManager->getStockLevel($product));
+        $purchasable = $product->get('field_available_for_purchase')->value;
+
+        if ($this->debug) {
+          \Drupal::logger('Commerce Customizations')->notice('Product ' . $product->id() . ' has a stock level of ' . $stock . '.');
+        }
+
+        if ($purchasable && ($stock - $quantity) <= 0) {
+          if (floatval(explode(" ", $item->getTotalPrice())[0]) != 0 && !$alwaysInStock) {
+            if ($this->debug) {
+              \Drupal::logger('Commerce Customizations')->notice('Product ' . $product->id() . ' is out-of-stock. Sending email.');
+            }
+            $this->stockEmailNotification($product);
+          }
+        }
+      } else {
+        if ($this->debug) {
+          \Drupal::logger('Commerce Customizations')->notice('Product ' . $product->id() . ' does not contain field_stock_level.');
+        }
+      }
+    }
+  }
+
+  /**
+   *
+   */
+  private function stockEmailNotification(ProductVariationInterface $variation) {
+	\Drupal::logger('commerce_customization')->notice('Sending out of stock email.');
+
+	$sku = $variation->getSku();
+    $mailManager = \Drupal::service('plugin.manager.mail');
+    $module = 'commerce_customizations';
+    $key = 'out_of_stock_alert';
+	$params = [];
+    $to = \Drupal::config('system.site')->get('mail');
+    $params['message'] = t('Item @sku (@variation_name) is out of stock.', ['@sku' => $sku, '@variation_name' => $variation->getTitle()]);
+    $params['sku'] = $sku;
+    $langcode = \Drupal::currentUser()->getPreferredLangcode();
+    $send = TRUE;
+    $result = $mailManager->mail($module, $key, $to, $langcode, $params, NULL, $send);
+
+    if ($result['result'] !== TRUE) {
+      \Drupal::logger('commerce_customizations')
+        ->error($this->t('Stock alert email failed to send for sku: @sku', ['@sku' => $sku]));
+    }
   }
 
 }
