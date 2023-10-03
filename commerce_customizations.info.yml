@@ -4,4 +4,5 @@ description: Allows customization of many aspects of Commerce 2.x.
 core_version_requirement: ^8 || ^9
 package: Commerce
 dependencies:
-  - hook_event_dispatcher
+  - hook_event_dispatcher:hook_event_dispatcher
+  - views_bulk_operations:views_bulk_operations

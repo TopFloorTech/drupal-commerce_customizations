@@ -18,10 +18,13 @@ class VariationsViewRouteSubscriber extends RouteSubscriberBase {
    */
   protected function alterRoutes(RouteCollection $collection) {
     $admin_routes = ['view.product_variations.page_product_variations'];
+
     foreach ($collection->all() as $name => $route) {
+      // Add admin routes to collection.
       if (in_array($name, $admin_routes)) {
         $route->setOption('_admin_route', TRUE);
       }
     }
+
   }
 }
