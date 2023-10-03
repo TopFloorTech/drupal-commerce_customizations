@@ -11,3 +11,7 @@ services:
     class: '\Drupal\commerce_customizations\EventSubscriber\ProductEventSubscriber'
     tags:
       - { name: 'event_subscriber' }
+  commerce_customizations.variations_view_route_subscriber:
+    class: '\Drupal\commerce_customizations\Routing\VariationsViewRouteSubscriber'
+    tags:
+      - { name: event_subscriber }
