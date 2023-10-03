@@ -1,0 +1,7 @@
+# Override the default product variation collection task.
+entity.commerce_product_variation.collection:
+  route_name: view.product_variations.page_product_variations
+  title: Variations
+  base_route: entity.commerce_product.canonical
+  weight: 15
+
