@@ -2,7 +2,10 @@
 
 namespace Drupal\commerce_customizations\EventSubscriber;
 
+use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Database\Connection;
 use Drupal\commerce_product\Event\ProductEvents;
+use Drupal\commerce_product\Event\ProductDefaultVariationEvent;
 use Drupal\commerce_product\Event\ProductVariationAjaxChangeEvent;
 use Drupal\commerce_product\Event\ProductVariationEvent;
 use Drupal\commerce_product\Event\ProductVariationTitleGenerateEvent;
@@ -13,6 +16,33 @@ use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 class ProductEventSubscriber implements EventSubscriberInterface {
 
   /**
+   * Drupal\Core\Database\Connection definition.
+   *
+   * @var \Drupal\Core\Database\Connection
+   */
+  protected $connection;
+
+  /**
+   * Drupal\Core\Entity\EntityTypeManagerInterface definition.
+   *
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
+   */
+  protected $entityTypeManager;
+
+  /**
+   * Constructs a new ProductEventSubscriber object.
+   *
+   * @param \Drupal\Core\Database\Connection $connection
+   *   The database connection.
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
+   *   The entity type manager service.
+   */
+  public function __construct(Connection $connection, EntityTypeManagerInterface $entity_type_manager) {
+    $this->connection = $connection;
+    $this->entityTypeManager = $entity_type_manager;
+  }
+
+  /**
    * {@inheritdoc}
    */
   public static function getSubscribedEvents() {
@@ -21,6 +51,7 @@ class ProductEventSubscriber implements EventSubscriberInterface {
     $events[ProductEvents::PRODUCT_VARIATION_AJAX_CHANGE][] = ['onProductVariationAjaxChange'];
     $events[ProductEvents::PRODUCT_VARIATION_TITLE_GENERATE][] = ['onProductVariationTitleGenerate'];
     $events[ProductEvents::PRODUCT_VARIATION_PRESAVE][] = ['onProductVariationPresave'];
+    $events[ProductEvents::PRODUCT_DEFAULT_VARIATION][] = ['onProductDefaultVariation'];
 
     return $events;
   }
@@ -134,6 +165,39 @@ class ProductEventSubscriber implements EventSubscriberInterface {
     }
 
     return $values;
+  }
+
+  /**
+   * Sets the default variation.
+   *
+   * @param \Drupal\commerce_product\Event\ProductDefaultVariationEvent $event
+   *   The product default variation event.
+   */
+  public function onProductDefaultVariation(ProductDefaultVariationEvent $event) {
+    // Set the default variation based on the draggableviews table.
+    $view = 'product_variations';
+    $display = 'page_product_variations_sort';
+    $product = $event->getProduct();
+    $args = json_encode([$product->id()]);
+    $query_string = "SELECT entity_id FROM {draggableviews_structure} WHERE view_name=:view AND view_display=:display AND weight=0 AND args=:args";
+    $replacements = [
+      ':view' => $view,
+      ':display' => $display,
+      ':args' => $args,
+    ];
+    $logger->notice('$query_string: ' . $query_string . '; $replacements: <pre>' . print_r($replacements, TRUE) . '</pre>');
+    $query = $this->connection->query($query_string, $replacements);
+    if ($query) {
+      while ($row = $query->fetchAssoc()) {
+        $logger->notice('$row: ' . print_r($row, TRUE) );
+        $variation_id = $row['entity_id'];
+        /** @var \Drupal\commerce_product\Entity\ProductVariationInterface $variation */
+        $variation = $this->entityTypeManager->getStorage('commerce_product_variation')->load($variation_id);
+        if ($variation) {
+          $event->setDefaultVariation($variation);
+        }
+      }
+    }
   }
 
 }
