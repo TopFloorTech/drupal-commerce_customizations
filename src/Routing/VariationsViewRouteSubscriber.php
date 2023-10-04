@@ -17,7 +17,7 @@ class VariationsViewRouteSubscriber extends RouteSubscriberBase {
    * {@inheritdoc}
    */
   protected function alterRoutes(RouteCollection $collection) {
-    $admin_routes = ['view.product_variations.page_product_variations'];
+    $admin_routes = ['view.product_variations.page_product_variations', 'view.product_variations.page_product_variations_sort'];
 
     foreach ($collection->all() as $name => $route) {
       // Add admin routes to collection.

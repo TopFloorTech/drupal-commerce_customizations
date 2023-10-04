@@ -9,6 +9,7 @@ services:
       - { name: 'event_subscriber' }
   commerce_customizations.product_event_subscriber:
     class: '\Drupal\commerce_customizations\EventSubscriber\ProductEventSubscriber'
+    arguments: ['@database', '@entity_type.manager']
     tags:
       - { name: 'event_subscriber' }
   commerce_customizations.variations_view_route_subscriber:
