@@ -185,11 +185,10 @@ class ProductEventSubscriber implements EventSubscriberInterface {
       ':display' => $display,
       ':args' => $args,
     ];
-    $logger->notice('$query_string: ' . $query_string . '; $replacements: <pre>' . print_r($replacements, TRUE) . '</pre>');
+    
     $query = $this->connection->query($query_string, $replacements);
     if ($query) {
       while ($row = $query->fetchAssoc()) {
-        $logger->notice('$row: ' . print_r($row, TRUE) );
         $variation_id = $row['entity_id'];
         /** @var \Drupal\commerce_product\Entity\ProductVariationInterface $variation */
         $variation = $this->entityTypeManager->getStorage('commerce_product_variation')->load($variation_id);
