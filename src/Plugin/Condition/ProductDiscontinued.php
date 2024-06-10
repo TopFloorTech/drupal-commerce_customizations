@@ -5,7 +5,6 @@ namespace Drupal\commerce_customizations\Plugin\Condition;
 use Drupal\commerce_product\Entity\ProductInterface;
 use Drupal\Core\Condition\ConditionPluginBase;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Plugin\Context\ContextDefinition;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -14,7 +13,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * @Condition(
  *   id = "product_discontinued",
  *   label = @Translation("Product Discontinued"),
- *   context = {
+ *   context_definitions = {
  *     "commerce_product" = @ContextDefinition("entity:commerce_product", required = FALSE, label = @Translation("Product"))
  *   }
  * )

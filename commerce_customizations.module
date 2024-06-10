@@ -2,18 +2,26 @@
 
 /**
  * @file
- * Contains commerce_checkout_customizations.module.
+ * Contains commerce_customizations.module.
  */
 
+use Drupal\address\Element\Address;
 use Drupal\commerce_customizations\CommerceEmailHelper;
+use Drupal\commerce_customizations\CouponsTable;
+use Drupal\commerce_order\Entity\OrderInterface;
+use Drupal\commerce_quote_cart\QuoteCartHelper;
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
+use Drupal\Core\TypedData\Exception\MissingDataException;
+use Drupal\profile\Entity\ProfileInterface;
 use Drupal\views\ViewExecutable;
+use Drupal\Core\Url;
 
 /**
  * Implements hook_help().
  */
-function commerce_customizations_help($route_name, RouteMatchInterface $route_match)
-{
+function commerce_customizations_help($route_name, RouteMatchInterface $route_match) {
   if ($route_name === 'help.page.commerce_customizations') {
     $output = '';
     $output .= '<h3>' . t('About') . '</h3>';
@@ -25,22 +33,21 @@ function commerce_customizations_help($route_name, RouteMatchInterface $route_ma
 /**
  * Implements hook_aluminum_storage_phone_numbers().
  */
-function commerce_customizations_aluminum_storage_phone_numbers()
-{
+function commerce_customizations_aluminum_storage_phone_numbers() {
   return [];
 }
 
 /**
  * Implements hook_theme_registry_alter().
  */
-function commerce_customizations_theme_registry_alter(&$theme_registry)
-{
+function commerce_customizations_theme_registry_alter(&$theme_registry) {
+  $extension = \Drupal::service('extension.list.module');
   if (isset($theme_registry['commerce_order__admin'])) {
-    $theme_registry['commerce_order__admin']['path'] = drupal_get_path('module', 'commerce_customizations') . '/templates';
+    $theme_registry['commerce_order__admin']['path'] = $extension->getPath('commerce_customizations') . '/templates';
   }
 
   if (isset($theme_registry['commerce_order__user'])) {
-    $theme_registry['commerce_order__user']['path'] = drupal_get_path('module', 'commerce_customizations') . '/templates';
+    $theme_registry['commerce_order__user']['path'] = $extension->getPath('commerce_customizations') . '/templates';
   }
 }
 
@@ -53,8 +60,7 @@ function commerce_customizations_theme_registry_alter(&$theme_registry)
  * @return \Drupal\Component\Render\MarkupInterface|mixed|string
  *   The customer name as markup or a string.
  */
-function commerce_customizations_get_customer_name(\Drupal\commerce_order\Entity\OrderInterface $order)
-{
+function commerce_customizations_get_customer_name(OrderInterface $order) {
   try {
     $customer = $order->getCustomer();
 
@@ -64,7 +70,7 @@ function commerce_customizations_get_customer_name(\Drupal\commerce_order\Entity
         /** @var \Drupal\commerce_shipping\Entity\ShipmentInterface $shipment */
         $shipment = $order->get('shipments')->first()->entity;
 
-        $profile = \Drupal\commerce_quote_cart\QuoteCartHelper::isPurchaseCart($order)
+        $profile = QuoteCartHelper::isPurchaseCart($order)
           ? $order->getBillingProfile()
           : $shipment->getShippingProfile();
 
@@ -72,13 +78,15 @@ function commerce_customizations_get_customer_name(\Drupal\commerce_order\Entity
         $address = $profile->get('address')->first();
 
         $name = $address->getGivenName();
-      } else {
+      }
+      else {
         $name = (NULL !== $customer) ? $customer->getDisplayName() : '';
       }
     }
 
     return $name;
-  } catch (\Drupal\Core\TypedData\Exception\MissingDataException $e) {
+  }
+  catch (MissingDataException $e) {
     return '';
   }
 
@@ -87,21 +95,20 @@ function commerce_customizations_get_customer_name(\Drupal\commerce_order\Entity
 /**
  * Implements hook_preprocess_commerce_order_receipt().
  */
-function commerce_customizations_preprocess_commerce_order_receipt(&$variables)
-{
+function commerce_customizations_preprocess_commerce_order_receipt(&$variables) {
   /** @var Drupal\commerce_order\Entity\OrderInterface $order */
   $order = $variables['order_entity'];
 
   $variables['shipping_info'] = commerce_customizations_expand_shipping_info($order);
   $variables['billing_info'] = commerce_customizations_expand_billing_info($order);
   $variables['customer_name'] = commerce_customizations_get_customer_name($order);
-  $variables['site_url'] = \Drupal\Core\Url::fromRoute('<front>')->setAbsolute(TRUE)->toString();
+  $variables['site_url'] = Url::fromRoute('<front>')->setAbsolute(TRUE)->toString();
   $variables['support_url'] = CommerceEmailHelper::nodeUrl(51);
   $variables['resources_url'] = CommerceEmailHelper::nodeUrl(28);
-  $variables['product_registration_url'] = \Drupal\Core\Url::fromUserInput('/me/registered-products')->setAbsolute(TRUE)->toString();
+  $variables['product_registration_url'] = Url::fromUserInput('/me/registered-products')->setAbsolute(TRUE)->toString();
   $variables['order_items'] = CommerceEmailHelper::orderItems($order);
-  $variables['order_label'] = \Drupal\commerce_quote_cart\QuoteCartHelper::isPurchaseCart($order) ? t('Order') : t('Quote');
-  $variables['is_quote'] = !\Drupal\commerce_quote_cart\QuoteCartHelper::isPurchaseCart($order);
+  $variables['order_label'] = QuoteCartHelper::isPurchaseCart($order) ? t('Order') : t('Quote');
+  $variables['is_quote'] = !QuoteCartHelper::isPurchaseCart($order);
   $variables['order_email'] = $order->getEmail();
   $variables['order_comments'] = !$order->get('field_comments')->isEmpty() ? $order->get('field_comments')->value : '';
 
@@ -111,12 +118,12 @@ function commerce_customizations_preprocess_commerce_order_receipt(&$variables)
 
   $variables['coupons'] = '';
   if ($order->hasField('coupons') && !$order->get('coupons')->isEmpty()) {
-    $variables['coupons'] = \Drupal\commerce_customizations\CouponsTable::build($order);
+    $variables['coupons'] = CouponsTable::build($order);
   }
 
 }
 
-function commerce_customizations_expand_billing_info(\Drupal\commerce_order\Entity\OrderInterface $order)
+function commerce_customizations_expand_billing_info(OrderInterface $order)
 {
   $billing_info = [];
 
@@ -129,8 +136,7 @@ function commerce_customizations_expand_billing_info(\Drupal\commerce_order\Enti
   return $billing_info;
 }
 
-function commerce_customizations_expand_shipping_info(\Drupal\commerce_order\Entity\OrderInterface $order)
-{
+function commerce_customizations_expand_shipping_info(OrderInterface $order) {
   $shipping_info = [];
   $shipping_data = \Drupal::service('commerce_shipping.order_shipment_summary')->build($order);
 
@@ -157,8 +163,7 @@ function commerce_customizations_expand_shipping_info(\Drupal\commerce_order\Ent
  * @return array
  *   The expanded profile variables.
  */
-function commerce_customizations_expand_profile_variables(\Drupal\profile\Entity\ProfileInterface $profile)
-{
+function commerce_customizations_expand_profile_variables(ProfileInterface $profile) {
   try {
     /** @var \Drupal\address\Plugin\Field\FieldType\AddressItem $address */
     $address = $profile->get('address')->first();
@@ -183,13 +188,13 @@ function commerce_customizations_expand_profile_variables(\Drupal\profile\Entity
     ];
 
     return $profile_variables;
-  } catch (\Drupal\Core\TypedData\Exception\MissingDataException $e) {
+  }
+  catch (MissingDataException $e) {
     return [];
   }
 }
 
-function commerce_customizations_preprocess_commerce_order(&$variables)
-{
+function commerce_customizations_preprocess_commerce_order(&$variables) {
   /** @var \Drupal\commerce_order\Entity\OrderInterface $order */
   $order = $variables['elements']['#commerce_order'];
 
@@ -208,8 +213,7 @@ function commerce_customizations_preprocess_commerce_order(&$variables)
 /**
  * Implements hook_entity_presave().
  */
-function commerce_customizations_commerce_product_presave(Drupal\Core\Entity\EntityInterface $entity)
-{
+function commerce_customizations_commerce_product_presave(EntityInterface $entity) {
   /** @var \Drupal\commerce_product\Entity\ProductInterface $entity */
 
   if ($entity->hasField('field_main_category')) {
@@ -250,7 +254,7 @@ function commerce_customizations_mail_alter(&$message)
     /** @var \Drupal\commerce_order\Entity\OrderInterface $order */
     $order = $message['params']['order'];
 
-    if (!\Drupal\commerce_quote_cart\QuoteCartHelper::isPurchaseCart($order)) {
+    if (!QuoteCartHelper::isPurchaseCart($order)) {
       $message['subject'] = t('Quote #@number confirmed', [
         '@number' => $order->id(),
       ]);
@@ -345,16 +349,14 @@ function commerce_customizations_append_query_string_for_csv($value) {
 /**
  * Implements hook_form_alter().
  */
-function commerce_customizations_form_profile_customer_edit_form_alter(&$form, \Drupal\Core\Form\FormStateInterface $form_state, $form_id)
-{
+function commerce_customizations_form_profile_customer_edit_form_alter(&$form, FormStateInterface $form_state, $form_id) {
   $form['#attached']['library'][] = 'commerce_customizations/profile-form';
 }
 
 /**
  * Implements hook_field_widget_form_alter().
  */
-function commerce_customizations_field_widget_form_alter(&$element, \Drupal\Core\Form\FormStateInterface $form_state, $context)
-{
+function commerce_customizations_field_widget_form_alter(&$element, FormStateInterface $form_state, $context) {
   $autofillMap = [
     'field_job_title' => 'organization-title',
     'field_phone_number' => 'tel',
@@ -373,14 +375,13 @@ function commerce_customizations_field_widget_form_alter(&$element, \Drupal\Core
   }
 
   if ($widget->getPluginId() === 'address_default') {
-    $element['address']['#process'][] = [\Drupal\address\Element\Address::class, 'processAddress'];
-    $element['address']['#process'][] = [\Drupal\address\Element\Address::class, 'processGroup'];
+    $element['address']['#process'][] = [Address::class, 'processAddress'];
+    $element['address']['#process'][] = [Address::class, 'processGroup'];
     $element['address']['#process'][] = 'commerce_customizations_process_address';
   }
 }
 
-function commerce_customizations_process_address($element, \Drupal\Core\Form\FormStateInterface $form_state, $form)
-{
+function commerce_customizations_process_address($element, FormStateInterface $form_state, $form) {
   $element['organization']['#required'] = TRUE;
 
   $type = $element['#parents'][0] === 'shipping_information' ? 'shipping' : 'billing';
