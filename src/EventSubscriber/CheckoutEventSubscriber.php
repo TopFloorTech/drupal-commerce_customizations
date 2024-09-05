@@ -2,12 +2,14 @@
 
 namespace Drupal\commerce_customizations\EventSubscriber;
 
+use Drupal\commerce_product\Entity\ProductVariationInterface;
 use Drupal\commerce_shipping\OrderShipmentSummaryInterface;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\hook_event_dispatcher\Event\Form\FormAlterEvent;
-use Drupal\hook_event_dispatcher\HookEventDispatcherEvents;
+use Drupal\Core\Render\RendererInterface;
+use Drupal\Core\StringTranslation\StringTranslationTrait;
+use Drupal\core_event_dispatcher\Event\Form\FormAlterEvent;
+use Drupal\core_event_dispatcher\FormHookEvents;
 use Drupal\state_machine\Event\WorkflowTransitionEvent;
-use Drupal\commerce_product\Entity\ProductVariationInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 /**
@@ -16,6 +18,9 @@ use Symfony\Component\EventDispatcher\EventSubscriberInterface;
  * @package Drupal\commerce_customizations\EventSubscriber
  */
 class CheckoutEventSubscriber implements EventSubscriberInterface {
+
+  use StringTranslationTrait;
+
   /**
    * Debug mode.
    *
@@ -24,12 +29,29 @@ class CheckoutEventSubscriber implements EventSubscriberInterface {
   protected $debug = FALSE;
 
   /**
-   * @param \Drupal\hook_event_dispatcher\Event\Form\FormAlterEvent $event
+   * RendererInterface definition.
+   *
+   * @var \Drupal\Core\Render\RendererInterface
+   */
+  protected $renderer;
+
+  /**
+   * Constructs a new CheckoutEventSubscriber object.
+   *
+   * @param \Drupal\Core\Render\RendererInterface $renderer
+   *   The renderer service.
+   */
+  public function __construct(RendererInterface $renderer) {
+    $this->renderer = $renderer;
+  }
+
+  /**
+   * @param \Drupal\core_event_dispatcher\Event\Form\FormAlterEvent $event
    */
   public function alterCheckoutForm(FormAlterEvent $event) {
-    $form = $event->getForm();
+    $form = &$event->getForm();
 
-    if (strpos($event->getFormId(), 'commerce_checkout_flow_') !== 0) {
+    if (!str_starts_with($event->getFormId(), 'commerce_checkout_flow_')) {
       return;
     }
 
@@ -98,7 +120,6 @@ class CheckoutEventSubscriber implements EventSubscriberInterface {
 
     $form['#attached']['library'][] = 'commerce_customizations/profile-form';
 
-    $event->setForm($form);
   }
 
   public function processShippingInformation(array $element, FormStateInterface $form_state) {
@@ -194,8 +215,8 @@ class CheckoutEventSubscriber implements EventSubscriberInterface {
     $template = '<div class="payment-message"><p>%s</p></div>';
 
     $output = [
-      t('All orders are prepay and add shipping using ground service. For expedited shipping or collect service, please call us. Please Note: We only ship to US & Canada addresses at this time. Orders placed AFTER 1:00 PM Eastern time are not guaranteed to ship same day For more information please call us.'),
-      '<strong>' . t('We collect sales tax in the following states: CT, GA, IL and SC.') . '</strong> ' . t('If you are a tax exempt organization in these states, please call your order in otherwise you will be charged sales tax.'),
+      $this->t('All orders are prepay and add shipping using ground service. For expedited shipping or collect service, please call us. Please Note: We only ship to US & Canada addresses at this time. Orders placed AFTER 1:00 PM Eastern time are not guaranteed to ship same day For more information please call us.'),
+      '<strong>' . $this->t('We collect sales tax in the following states: CT, GA, IL and SC.') . '</strong> ' . $this->t('If you are a tax exempt organization in these states, please call your order in otherwise you will be charged sales tax.'),
     ];
 
     return sprintf($template, implode('</p><p>', $output));
@@ -218,10 +239,11 @@ class CheckoutEventSubscriber implements EventSubscriberInterface {
 
       $element['children'][] = [
         '#markup' => '<i class="' . implode(" ", $classes) . '"></i>',
+        '#allowed_tags' => ['i'],
       ];
     }
 
-    return render($element);
+    return $this->renderer->render($element);
   }
 
   /**
@@ -229,7 +251,7 @@ class CheckoutEventSubscriber implements EventSubscriberInterface {
    */
   static function getSubscribedEvents() {
     return [
-      HookEventDispatcherEvents::FORM_ALTER => [
+      FormHookEvents::FORM_ALTER => [
         ['alterCheckoutForm'],
       ],
       'commerce_order.place.post_transition' => [
@@ -242,11 +264,12 @@ class CheckoutEventSubscriber implements EventSubscriberInterface {
    *
    */
   public function checkStockLevel(WorkflowTransitionEvent $event) {
+    /** @var \Drupal\commerce_order\Entity\OrderInterface $order $order */
     $order = $event->getEntity();
-    $items = $order->getItems(); // @var \Drupal\commerce_order\Entity\OrderInterface $order
+    $items = $order->getItems();
 
     foreach ($items as $item) {
-      // @var \Drupal\commerce_product\Entity\ProductVariationInterface $product
+      /** @var \Drupal\commerce_product\Entity\ProductVariationInterface $product */
       $product = $item->getPurchasedEntity();
       $quantity = $item->getQuantity();
 
@@ -283,7 +306,10 @@ class CheckoutEventSubscriber implements EventSubscriberInterface {
   }
 
   /**
+   * Send stock email notification.
    *
+   * @param \Drupal\commerce_product\Entity\ProductVariationInterface $variation
+   *   The product variation.
    */
   private function stockEmailNotification(ProductVariationInterface $variation) {
 	\Drupal::logger('commerce_customization')->notice('Sending out of stock email.');

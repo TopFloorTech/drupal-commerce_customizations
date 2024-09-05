@@ -3,8 +3,8 @@
 namespace Drupal\commerce_customizations\EventSubscriber;
 
 use Drupal\Core\StringTranslation\StringTranslationTrait;
-use Drupal\hook_event_dispatcher\Event\Form\FormAlterEvent;
-use Drupal\hook_event_dispatcher\HookEventDispatcherEvents;
+use Drupal\core_event_dispatcher\Event\Form\FormAlterEvent;
+use Drupal\core_event_dispatcher\FormHookEvents;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 /**
@@ -17,14 +17,14 @@ class CartEventSubscriber implements EventSubscriberInterface {
   use StringTranslationTrait;
 
   /**
-   * @param \Drupal\hook_event_dispatcher\Event\Form\FormAlterEvent $event
+   * @param \Drupal\core_event_dispatcher\Event\Form\FormAlterEvent $event
    */
   public function alterAddToCartForm(FormAlterEvent $event) {
-    if (strpos($event->getFormId(), 'commerce_order_item_add_to_cart_form') !== 0) {
+    if (!str_starts_with($event->getFormId(), 'commerce_order_item_add_to_cart_form')) {
       return;
     }
 
-    $form = $event->getForm();
+    $form = &$event->getForm();
 
     if (isset($form['actions']['submit'])) {
       $form['actions']['submit']['#prefix'] = '<span class="CartButton CartButton--submit">';
@@ -41,7 +41,7 @@ class CartEventSubscriber implements EventSubscriberInterface {
       $attributes = $form['purchased_entity']['widget'][0]['attributes'];
 
       foreach ($attributes as $key => $element) {
-        if (strpos($key, 'attribute_') !== 0) {
+        if (!str_starts_with($key, 'attribute_')) {
           continue;
         }
 
@@ -55,18 +55,17 @@ class CartEventSubscriber implements EventSubscriberInterface {
       }
     }
 
-    $event->setForm($form);
   }
 
   /**
-   * @param \Drupal\hook_event_dispatcher\Event\Form\FormAlterEvent $event
+   * @param \Drupal\core_event_dispatcher\Event\Form\FormAlterEvent $event
    */
   public function alterCartForm(FormAlterEvent $event) {
     if (strpos($event->getFormId(), 'views_form_commerce_cart_form_') !== 0) {
       return;
     }
 
-    $form = $event->getForm();
+    $form = &$event->getForm();
 
     $buttons = [
       'checkout' => 'CartCheckoutButton',
@@ -98,7 +97,6 @@ class CartEventSubscriber implements EventSubscriberInterface {
 
     $form['#attached']['library'][] = 'commerce_customizations/cart-form';
 
-    $event->setForm($form);
   }
 
   /**
@@ -107,8 +105,8 @@ class CartEventSubscriber implements EventSubscriberInterface {
   static function getSubscribedEvents() {
     $events = [];
 
-    $events[HookEventDispatcherEvents::FORM_ALTER][] = ['alterAddToCartForm'];
-    $events[HookEventDispatcherEvents::FORM_ALTER][] = ['alterCartForm'];
+    $events[FormHookEvents::FORM_ALTER][] = ['alterAddToCartForm'];
+    $events[FormHookEvents::FORM_ALTER][] = ['alterCartForm'];
 
     return $events;
   }
