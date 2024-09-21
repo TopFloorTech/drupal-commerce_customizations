@@ -46,6 +46,8 @@ class CheckoutEventSubscriber implements EventSubscriberInterface {
   }
 
   /**
+   * Alters checkout form.
+   *
    * @param \Drupal\core_event_dispatcher\Event\Form\FormAlterEvent $event
    */
   public function alterCheckoutForm(FormAlterEvent $event) {
@@ -56,7 +58,7 @@ class CheckoutEventSubscriber implements EventSubscriberInterface {
     }
 
     if (isset($form['actions']['next'])) {
-      $old_suffix = isset($form['actions']['next']['#suffix']) ? $form['actions']['next']['#suffix'] : '';
+      $old_suffix = $form['actions']['next']['#suffix'] ?? '';
       $form['actions']['next']['#attributes']['class'][] = 'CheckoutButton-input';
       $form['actions']['next']['#prefix'] = '<span class="CheckoutButton">';
       $form['actions']['next']['#suffix'] = '</span>' . $old_suffix;
@@ -70,10 +72,6 @@ class CheckoutEventSubscriber implements EventSubscriberInterface {
       $form['shipping_information']['#weight'] = -10;
       $form['totals'] = $this->buildShippingMessage();
       $form['shipping_information']['recalculate_shipping']['#value'] = t('Show My Shipping Options');
-
-      if (isset($form['shipping_information']['shipping_profile'])) {
-        $form['shipping_information']['shipping_profile']['#after_build'][] = [$this, 'processShippingInformation'];
-      }
     }
 
     if (isset($form['payment_information'])) {
@@ -85,7 +83,7 @@ class CheckoutEventSubscriber implements EventSubscriberInterface {
     }
 
     if (isset($form['contact_information'])) {
-      $form['contact_information']['#title'] = t('Email Address');
+      $form['contact_information']['#title'] = $this->t('Email Address');
       $form['contact_information']['#weight'] = -20;
     }
 
@@ -98,7 +96,7 @@ class CheckoutEventSubscriber implements EventSubscriberInterface {
     //    }
 
     if (isset($form['review']['contact_information'])) {
-      $form['review']['contact_information']['#title'] = t('Email Address');
+      $form['review']['contact_information']['#title'] = $this->t('Email Address');
     }
 
     if (isset($form['sidebar']['coupon_redemption'])) {
@@ -120,12 +118,6 @@ class CheckoutEventSubscriber implements EventSubscriberInterface {
 
     $form['#attached']['library'][] = 'commerce_customizations/profile-form';
 
-  }
-
-  public function processShippingInformation(array $element, FormStateInterface $form_state) {
-    // @todo Force default country here if needed
-
-    return $element;
   }
 
   public function processPaymentInformation(array $element, FormStateInterface $form_state) {
@@ -199,7 +191,7 @@ class CheckoutEventSubscriber implements EventSubscriberInterface {
           '#type' => 'container',
           '#attributes' => ['class' => ['order-total']],
           'label' => [
-            '#markup' => '<div class="order-total__label">' . t('Order total') . ':</div>',
+            '#markup' => '<div class="order-total__label">' . $this->t('Order total') . ':</div>',
           ],
           'totals' => $field,
           '#weight' => -1,
@@ -320,7 +312,7 @@ class CheckoutEventSubscriber implements EventSubscriberInterface {
     $key = 'out_of_stock_alert';
 	$params = [];
     $to = \Drupal::config('system.site')->get('mail');
-    $params['message'] = t('Item @sku (@variation_name) is out of stock.', ['@sku' => $sku, '@variation_name' => $variation->getTitle()]);
+    $params['message'] = $this->t('Item @sku (@variation_name) is out of stock.', ['@sku' => $sku, '@variation_name' => $variation->getTitle()]);
     $params['sku'] = $sku;
     $langcode = \Drupal::currentUser()->getPreferredLangcode();
     $send = TRUE;
