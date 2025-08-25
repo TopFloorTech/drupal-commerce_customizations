@@ -111,9 +111,11 @@ class ProductDiscontinued extends ConditionPluginBase {
    * {@inheritdoc}
    */
   public function summary() {
-    $response = 'The product is ';
-    $response .= $this->isNegated() ? 'not discontinued.' : 'discontinued.';
-    return $this->t($response);
+    $response = $this->t('The product is discontinued.');
+    if ($this->isNegated()) {
+      $response = $this->t('The product is not discontinued.');
+    }
+    return $response;
   }
 
 }

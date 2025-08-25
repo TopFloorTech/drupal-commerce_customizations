@@ -2,8 +2,11 @@
 
 namespace Drupal\commerce_customizations\EventSubscriber;
 
+use _PHPStan_9a6ded56a\Nette\Neon\Entity;
 use Drupal\commerce_product\Entity\ProductVariationInterface;
 use Drupal\commerce_shipping\OrderShipmentSummaryInterface;
+use Drupal\commerce_stock\StockServiceManagerInterface;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\RendererInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
@@ -36,13 +39,33 @@ class CheckoutEventSubscriber implements EventSubscriberInterface {
   protected $renderer;
 
   /**
+   * EntityTypeManagerInterface definition.
+   *
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
+   */
+  protected $entityTypeManager;
+
+  /**
+   * StockServiceManagerInterface definition.
+   *
+   * @var \Drupal\commerce_stock\StockServiceManagerInterface
+   */
+  protected $stockServiceManager;
+
+  /**
    * Constructs a new CheckoutEventSubscriber object.
    *
    * @param \Drupal\Core\Render\RendererInterface $renderer
    *   The renderer service.
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
+   *   The entityTypeManager service.
+   * @param \Drupal\commerce_stock\StockServiceManagerInterface $stock_manager
+   *   The stockServiceManager service.
    */
-  public function __construct(RendererInterface $renderer) {
+  public function __construct(RendererInterface $renderer, EntityTypeManagerInterface $entity_type_manager, StockServiceManagerInterface $stock_service_manager) {
     $this->renderer = $renderer;
+    $this->entityTypeManager = $entity_type_manager;
+    $this->stockServiceManager = $stock_service_manager;
   }
 
   /**
@@ -71,7 +94,7 @@ class CheckoutEventSubscriber implements EventSubscriberInterface {
     if (isset($form['shipping_information'])) {
       $form['shipping_information']['#weight'] = -10;
       $form['totals'] = $this->buildShippingMessage();
-      $form['shipping_information']['recalculate_shipping']['#value'] = t('Show My Shipping Options');
+      $form['shipping_information']['recalculate_shipping']['#value'] = $this->t('Show My Shipping Options');
     }
 
     if (isset($form['payment_information'])) {
@@ -177,9 +200,9 @@ class CheckoutEventSubscriber implements EventSubscriberInterface {
       $orderId = $form['sidebar']['order_summary']['view']['#arguments'][0];
 
       /** @var \Drupal\commerce_order\Entity\OrderInterface $order */
-      $order = \Drupal::entityTypeManager()->getStorage('commerce_order')->load($orderId);
+      $order = $this->entityTypeManager->getStorage('commerce_order')->load($orderId);
 
-      $viewBuilder = \Drupal::entityTypeManager()->getViewBuilder('commerce_order');
+      $viewBuilder = $this->entityTypeManager->getViewBuilder('commerce_order');
 
       if ($order) {
         $field = $viewBuilder->viewField($order->get('total_price'), [
@@ -278,20 +301,27 @@ class CheckoutEventSubscriber implements EventSubscriberInterface {
         $purchasable = $product->get('field_available_for_purchase')->value;
 
         if ($this->debug) {
-          \Drupal::logger('Commerce Customizations')->notice('Product ' . $product->id() . ' has a stock level of ' . $stock . '.');
+          \Drupal::logger('Commerce Customizations')->notice('Product @product_id has a stock level of @stock.', [
+            '@product_id' => $product->id(),
+            '@stock' => $stock,
+          ]);
         }
 
         if ($purchasable && ($stock - $quantity) <= 0) {
           if (floatval(explode(" ", $item->getTotalPrice())[0]) != 0 && !$alwaysInStock) {
             if ($this->debug) {
-              \Drupal::logger('Commerce Customizations')->notice('Product ' . $product->id() . ' is out-of-stock. Sending email.');
+              \Drupal::logger('Commerce Customizations')->notice('Product @product_id is out-of-stock. Sending email.', [
+                '@product_id' => $product->id(),
+              ]);
             }
             $this->stockEmailNotification($product);
           }
         }
       } else {
         if ($this->debug) {
-          \Drupal::logger('Commerce Customizations')->notice('Product ' . $product->id() . ' does not contain field_stock_level.');
+          \Drupal::logger('Commerce Customizations')->notice('Product @product_id does not contain field_stock_level.', [
+            '@product_id' => $product->id(),
+          ]);
         }
       }
     }
@@ -304,13 +334,13 @@ class CheckoutEventSubscriber implements EventSubscriberInterface {
    *   The product variation.
    */
   private function stockEmailNotification(ProductVariationInterface $variation) {
-	\Drupal::logger('commerce_customization')->notice('Sending out of stock email.');
+	  \Drupal::logger('commerce_customization')->notice('Sending out of stock email.');
 
-	$sku = $variation->getSku();
+	  $sku = $variation->getSku();
     $mailManager = \Drupal::service('plugin.manager.mail');
     $module = 'commerce_customizations';
     $key = 'out_of_stock_alert';
-	$params = [];
+	  $params = [];
     $to = \Drupal::config('system.site')->get('mail');
     $params['message'] = $this->t('Item @sku (@variation_name) is out of stock.', ['@sku' => $sku, '@variation_name' => $variation->getTitle()]);
     $params['sku'] = $sku;
@@ -320,7 +350,7 @@ class CheckoutEventSubscriber implements EventSubscriberInterface {
 
     if ($result['result'] !== TRUE) {
       \Drupal::logger('commerce_customizations')
-        ->error($this->t('Stock alert email failed to send for sku: @sku', ['@sku' => $sku]));
+        ->error('Stock alert email failed to send for sku: @sku', ['@sku' => $sku]);
     }
   }
 

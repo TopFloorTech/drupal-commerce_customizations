@@ -5,7 +5,7 @@ services:
       - { name: 'event_subscriber' }
   commerce_customizations.checkout_event_subscriber:
     class: '\Drupal\commerce_customizations\EventSubscriber\CheckoutEventSubscriber'
-    arguments: ['@renderer', '@commerce_stock.service_manager']
+    arguments: ['@renderer', '@entity_type.manager', '@commerce_stock.service_manager']
     tags:
       - { name: 'event_subscriber' }
   commerce_customizations.product_event_subscriber:
