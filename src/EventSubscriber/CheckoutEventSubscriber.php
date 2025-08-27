@@ -6,6 +6,7 @@ use _PHPStan_9a6ded56a\Nette\Neon\Entity;
 use Drupal\commerce_product\Entity\ProductVariationInterface;
 use Drupal\commerce_shipping\OrderShipmentSummaryInterface;
 use Drupal\commerce_stock\StockServiceManagerInterface;
+use Drupal\Core\DependencyInjection\DependencySerializationTrait;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\RendererInterface;
@@ -22,6 +23,7 @@ use Symfony\Component\EventDispatcher\EventSubscriberInterface;
  */
 class CheckoutEventSubscriber implements EventSubscriberInterface {
 
+  use DependencySerializationTrait;
   use StringTranslationTrait;
 
   /**
