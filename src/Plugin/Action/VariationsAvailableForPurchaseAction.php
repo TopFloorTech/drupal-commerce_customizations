@@ -30,7 +30,7 @@ class VariationsAvailableForPurchaseAction extends ViewsBulkOperationsActionBase
   /**
    * {@inheritdoc}
    */
-  public function execute($entity = NULL) {
+  public function execute($entity = NULL): void {
     $new_value = $this->configuration['available_for_purchase'];
     if ($entity) {
       $entity->set('field_available_for_purchase', $new_value);
@@ -41,14 +41,14 @@ class VariationsAvailableForPurchaseAction extends ViewsBulkOperationsActionBase
   /**
    * {@inheritdoc}
    */
-  public function access($object, AccountInterface $account = NULL, $return_as_object = FALSE) {
+  public function access($object, ?AccountInterface $account = NULL, $return_as_object = FALSE): bool|\Drupal\Core\Access\AccessResultInterface {
     return $object->access('update', $account, $return_as_object);
   }
 
   /**
    * {@inheritdoc}
    */
-  public function buildConfigurationForm(array $form, FormStateInterface $form_state) {
+  public function buildConfigurationForm(array $form, FormStateInterface $form_state): array {
     $form['available_for_purchase'] = [
       '#type' => 'radios',
       '#title' => $this->t('Available for Purchase'),

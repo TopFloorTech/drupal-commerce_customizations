@@ -2,10 +2,12 @@
 
 namespace Drupal\commerce_customizations\Plugin\Commerce\CheckoutFlow;
 
+use Drupal\commerce_checkout\Attribute\CommerceCheckoutFlow;
 use Drupal\commerce\Response\NeedsRedirectException;
 use Drupal\commerce_checkout\Plugin\Commerce\CheckoutFlow\MultistepDefault;
 use Drupal\commerce_quote_cart\QuoteCartHelper;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Url;
 
 /**
@@ -16,6 +18,10 @@ use Drupal\Core\Url;
  *   label = "Multistep - Order",
  * )
  */
+#[CommerceCheckoutFlow(
+  id: "multistep_order",
+  label: new TranslatableMarkup("Multistep - Order"),
+)]
 class MultistepOrder extends MultistepDefault {
 
   /**
@@ -38,7 +44,6 @@ class MultistepOrder extends MultistepDefault {
       'complete' => $steps['complete']
     ];
 
-    //$steps['order_information']['label'] = $this->t('Shipping info');
     $steps['payment']['label'] = $this->t('Place Order');
 
     return $steps;
@@ -74,7 +79,12 @@ class MultistepOrder extends MultistepDefault {
     }
   }
 
-  protected function getUrlOptions($step_id) {
+  /**
+   * @param $step_id
+   *
+   * @return array|array[]
+   */
+  protected function getUrlOptions($step_id): array {
     $options = [];
     if ($step_id == 'complete') {
       $type = 'quote';

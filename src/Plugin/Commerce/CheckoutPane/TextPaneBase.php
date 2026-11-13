@@ -74,8 +74,10 @@ abstract class TextPaneBase extends CheckoutPaneBase {
 
   /**
    * Gets a render array for this pane's text.
+   *
+   * @return array
    */
-  protected function getText() {
+  protected function getText(): array {
     return [
       '#type' => 'processed_text',
       '#text' => $this->configuration['text'],

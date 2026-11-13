@@ -23,7 +23,7 @@ class LoginStepText extends TextPaneBase {
    *
    * @var \Drupal\Core\Session\AccountInterface
    */
-  protected $currentUser;
+  protected AccountInterface $currentUser;
 
   /**
    * Constructs a new LoginStepText object.
@@ -49,7 +49,7 @@ class LoginStepText extends TextPaneBase {
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition, CheckoutFlowInterface $checkout_flow = NULL) {
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition, ?CheckoutFlowInterface $checkout_flow = NULL) {
     return new static(
       $configuration,
       $plugin_id,
@@ -63,7 +63,7 @@ class LoginStepText extends TextPaneBase {
   /**
    * {@inheritdoc}
    */
-  public function isVisible() {
+  public function isVisible(): bool {
     return $this->currentUser->isAnonymous();
   }
 

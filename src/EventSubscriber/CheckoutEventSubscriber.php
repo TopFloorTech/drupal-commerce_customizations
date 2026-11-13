@@ -2,10 +2,10 @@
 
 namespace Drupal\commerce_customizations\EventSubscriber;
 
-use _PHPStan_9a6ded56a\Nette\Neon\Entity;
 use Drupal\commerce_product\Entity\ProductVariationInterface;
 use Drupal\commerce_shipping\OrderShipmentSummaryInterface;
 use Drupal\commerce_stock\StockServiceManagerInterface;
+use Drupal\Component\Render\MarkupInterface;
 use Drupal\Core\DependencyInjection\DependencySerializationTrait;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
@@ -31,28 +31,28 @@ class CheckoutEventSubscriber implements EventSubscriberInterface {
    *
    * @var boolean
    */
-  protected $debug = FALSE;
+  protected bool $debug = FALSE;
 
   /**
    * RendererInterface definition.
    *
    * @var \Drupal\Core\Render\RendererInterface
    */
-  protected $renderer;
+  protected RendererInterface $renderer;
 
   /**
    * EntityTypeManagerInterface definition.
    *
    * @var \Drupal\Core\Entity\EntityTypeManagerInterface
    */
-  protected $entityTypeManager;
+  protected EntityTypeManagerInterface $entityTypeManager;
 
   /**
    * StockServiceManagerInterface definition.
    *
    * @var \Drupal\commerce_stock\StockServiceManagerInterface
    */
-  protected $stockServiceManager;
+  protected StockServiceManagerInterface $stockServiceManager;
 
   /**
    * Constructs a new CheckoutEventSubscriber object.
@@ -75,7 +75,7 @@ class CheckoutEventSubscriber implements EventSubscriberInterface {
    *
    * @param \Drupal\core_event_dispatcher\Event\Form\FormAlterEvent $event
    */
-  public function alterCheckoutForm(FormAlterEvent $event) {
+  public function alterCheckoutForm(FormAlterEvent $event): void {
     $form = &$event->getForm();
 
     if (!str_starts_with($event->getFormId(), 'commerce_checkout_flow_')) {
@@ -145,7 +145,14 @@ class CheckoutEventSubscriber implements EventSubscriberInterface {
 
   }
 
-  public function processPaymentInformation(array $element, FormStateInterface $form_state) {
+  /**
+   * Process payment information.
+   * @param array $element
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *
+   * @return array
+   */
+  public function processPaymentInformation(array $element, FormStateInterface $form_state): array {
     $element['#sorted'] = FALSE;
 
     if (isset($element['billing_information'])) {
@@ -181,9 +188,13 @@ class CheckoutEventSubscriber implements EventSubscriberInterface {
     return $element;
   }
 
-  protected function buildShippingMessage() {
+  /**
+   * Build shipping message.
+   *
+   * @return array
+   */
+  protected function buildShippingMessage(): array {
     return [
-      '#type' => 'markup',
       '#markup' => $this->messageContent(),
       '#weight' => -1,
     ];
@@ -195,7 +206,7 @@ class CheckoutEventSubscriber implements EventSubscriberInterface {
    * @return array
    * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
    */
-  protected function buildTotals(array $form) {
+  protected function buildTotals(array $form): array {
     $element = [];
 
     if (isset($form['sidebar']['order_summary']['view']['#arguments'][0])) {
@@ -228,7 +239,12 @@ class CheckoutEventSubscriber implements EventSubscriberInterface {
     return $element;
   }
 
-  protected function messageContent() {
+  /**
+   * Message content.
+   *
+   * @return string
+   */
+  protected function messageContent(): string {
     $template = '<div class="payment-message"><p>%s</p></div>';
 
     $output = [
@@ -239,7 +255,13 @@ class CheckoutEventSubscriber implements EventSubscriberInterface {
     return sprintf($template, implode('</p><p>', $output));
   }
 
-  protected function buildCreditCardFormIcons() {
+  /**
+   * Build credit card form icons.
+   *
+   * @return \Drupal\Component\Render\MarkupInterface
+   * @throws \Exception
+   */
+  protected function buildCreditCardFormIcons(): MarkupInterface {
     $element = [
       '#type' => 'container',
       '#attributes' => ['class' => ['credit-card-form__icons']],
@@ -278,9 +300,11 @@ class CheckoutEventSubscriber implements EventSubscriberInterface {
   }
 
   /**
+   * Check stock level.
    *
+   * @param \Drupal\state_machine\Event\WorkflowTransitionEvent $event
    */
-  public function checkStockLevel(WorkflowTransitionEvent $event) {
+  public function checkStockLevel(WorkflowTransitionEvent $event): void {
     /** @var \Drupal\commerce_order\Entity\OrderInterface $order $order */
     $order = $event->getEntity();
     $items = $order->getItems();
@@ -319,7 +343,8 @@ class CheckoutEventSubscriber implements EventSubscriberInterface {
             $this->stockEmailNotification($product);
           }
         }
-      } else {
+      }
+      else {
         if ($this->debug) {
           \Drupal::logger('Commerce Customizations')->notice('Product @product_id does not contain field_stock_level.', [
             '@product_id' => $product->id(),
@@ -335,7 +360,7 @@ class CheckoutEventSubscriber implements EventSubscriberInterface {
    * @param \Drupal\commerce_product\Entity\ProductVariationInterface $variation
    *   The product variation.
    */
-  private function stockEmailNotification(ProductVariationInterface $variation) {
+  private function stockEmailNotification(ProductVariationInterface $variation): void {
 	  \Drupal::logger('commerce_customization')->notice('Sending out of stock email.');
 
 	  $sku = $variation->getSku();
